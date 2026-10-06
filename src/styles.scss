@@ -1,0 +1,21 @@
+:root {
+  --azul-900: #07142f;
+  --azul-800: #0b1f4d;
+  --azul-700: #12306e;
+  --azul-500: #2f5fd0;
+  --azul-100: #e6edfb;
+  --dourado: #f5b83d;
+  --texto: #14213d;
+  --fundo: #f6f8fd;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--texto);
+  background: var(--fundo);
+  line-height: 1.6;
+}
+h1, h2, h3 { font-family: 'Poppins', sans-serif; line-height: 1.15; margin: 0; }
