@@ -1,0 +1,355 @@
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo" [class.topo--solido]="rolou() || menuAberto()">
+  <div class="topo__barra container">
+    <a class="logo" href="#inicio" (click)="fecharMenu()" aria-label="Conectados — início">
+      <span class="marca" style="--w: 150px"><img src="img/logo-conectados.png" alt="" /></span>
+    </a>
+
+    <button
+      class="hamburguer"
+      type="button"
+      [class.aberto]="menuAberto()"
+      [attr.aria-expanded]="menuAberto()"
+      aria-controls="menu-principal"
+      aria-label="Abrir menu"
+      (click)="alternarMenu()"
+    >
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav id="menu-principal" class="menu" [class.menu--aberto]="menuAberto()">
+      @for (item of menu; track item.id) {
+        <a
+          [href]="'#' + item.id"
+          [class.ativo]="secaoAtiva() === item.id"
+          (click)="fecharMenu()"
+          >{{ item.label }}</a
+        >
+      }
+      <a class="btn btn--azul btn--sm" href="#como" (click)="fecharMenu()">Garantir vaga</a>
+    </nav>
+  </div>
+</header>
+
+<div class="faixa faixa--azul" aria-hidden="true">
+  <div class="faixa__trilho">
+    @for (r of [0, 1]; track r) {
+      @for (t of faixa; track t) {
+        <span>{{ t }}</span><b>✦</b>
+      }
+      <span>Conectados</span><b>✦</b>
+    }
+  </div>
+</div>
+
+<main id="conteudo">
+  <!-- HERO -->
+  <section id="inicio" class="hero">
+    <div class="container hero__conteudo">
+      <p class="script revelar">3ª edição Jovem · Igreja Cristã Emanuel Moriyah</p>
+      <h1 class="hero__titulo revelar">
+        <span class="sr-only">Conectados</span>
+        <span class="marca marca--hero"><img src="img/logo-conectados.png" alt="" /></span>
+      </h1>
+      <div class="hero__tags revelar">
+        <span>Palavra</span><span>Presença</span><span>Fogo</span>
+      </div>
+
+      <div class="contagem revelar" role="timer" aria-label="Contagem regressiva para o acampamento">
+        @for (c of contagem(); track c.rotulo) {
+          <div class="contagem__item">
+            <strong>{{ c.valor < 10 ? '0' + c.valor : c.valor }}</strong>
+            <small>{{ c.rotulo }}</small>
+          </div>
+        }
+      </div>
+
+      <div class="hero__acoes revelar">
+        <a class="btn btn--laranja" routerLink="/inscricao">Quero me inscrever →</a>
+        <a class="btn btn--contorno" href="#tema">Conheça o acampamento</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- VÍDEOS -->
+  <section class="videos container revelar" aria-roledescription="carrossel" aria-label="Vídeos">
+    <div class="carrossel">
+      <div class="carrossel__trilho" [style.transform]="'translateX(-' + slideAtual() * 100 + '%)'">
+        @for (s of slides; track s) {
+          <div class="carrossel__slide" [attr.aria-hidden]="s !== slideAtual()">
+            <button class="play" type="button" [attr.aria-label]="'Reproduzir vídeo ' + (s + 1)" [attr.tabindex]="s === slideAtual() ? 0 : -1">▶</button>
+            <p>Vídeo de chamada {{ s + 1 }}</p>
+          </div>
+        }
+      </div>
+      <button class="carrossel__seta carrossel__seta--esq" type="button" aria-label="Vídeo anterior" (click)="mudarSlide(-1)">‹</button>
+      <button class="carrossel__seta carrossel__seta--dir" type="button" aria-label="Próximo vídeo" (click)="mudarSlide(1)">›</button>
+      <span class="carrossel__contador">{{ slideAtual() + 1 }} / {{ totalSlides }}</span>
+    </div>
+    <div class="pontos">
+      @for (s of slides; track s) {
+        <button
+          type="button"
+          [class.ativo]="s === slideAtual()"
+          [attr.aria-label]="'Ir para o vídeo ' + (s + 1)"
+          (click)="slideAtual.set(s)"
+        ></button>
+      }
+    </div>
+  </section>
+
+  <!-- TEMA -->
+  <section id="tema" class="tema container">
+    <p class="script script--laranja revelar">Nosso acampamento está chegando!</p>
+    <div class="selos revelar"><span>Nova edição</span><span class="laranja">6 a 9 de fevereiro</span></div>
+    <h2 class="tema__titulo revelar">Alegria <em>que não</em> passa</h2>
+    <blockquote class="revelar">
+      “A alegria do Senhor é a <span>vossa força</span>.”
+      <cite>— Neemias 8:10</cite>
+    </blockquote>
+    <p class="tema__texto revelar">
+      Quatro dias longe da rotina e perto do Deus que conecta. Palavra, louvor, gincanas e
+      comunhão para viver uma alegria que não depende das circunstâncias.
+    </p>
+    <div class="pilares">
+      @for (p of pilares; track p.num; let i = $index) {
+        <article class="pilar revelar" [class.pilar--laranja]="i === 3" [style.transition-delay]="i * 90 + 'ms'">
+          <small>{{ p.num }}</small>
+          <h3>{{ p.titulo }}</h3>
+          <p>{{ p.texto }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- ONDE -->
+  <section id="onde" class="secao secao--clara">
+    <div class="container">
+      <div class="cabecalho revelar"><h2>Onde?</h2><span class="script">Conheça o lugar</span></div>
+      <div class="fotos">
+        @for (n of [1, 2, 3]; track n) {
+          <figure class="foto revelar" [style.transition-delay]="n * 90 + 'ms'">
+            <span>[Foto do local {{ n }}]</span>
+            <img [src]="'local/foto-' + n + '.jpg'" alt="Villa do Galo, local do acampamento" loading="lazy" (error)="$any($event.target).remove()" />
+          </figure>
+        }
+      </div>
+    </div>
+    <div class="endereco revelar">
+      <strong>📍 Villa do Galo</strong>
+      <span>Núcleo Rural Alexandre Gusmão, Incra 9, Gleba 3, Chácara 429 · Ceilândia, Brasília – DF · 72701-996</span>
+    </div>
+    <div class="container">
+      <div class="mapa revelar">
+        <iframe
+          title="Mapa da Villa do Galo"
+          src="https://maps.google.com/maps?q=-15.7595763,-48.1935888&z=14&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+      </div>
+      <div class="centro revelar botoes-local">
+        <a class="btn btn--escuro" [href]="links.mapa" target="_blank" rel="noopener">Abrir no Google Maps ↗</a>
+        <a class="btn btn--contorno-escuro" [href]="links.instagramLocal" target="_blank" rel="noopener">Ver fotos no Instagram ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUANDO -->
+  <section id="quando" class="secao">
+    <div class="container">
+      <div class="cabecalho revelar"><h2>Quando?</h2><span class="script">Anota aí!</span></div>
+      <div class="quando">
+        <article class="quando__card quando__card--destaque revelar">
+          <small>Data</small><strong>6 a 9</strong><span>de fevereiro</span>
+        </article>
+        <article class="quando__card revelar">
+          <small>Saída da igreja</small><strong>10h</strong><span>da manhã</span>
+        </article>
+        <article class="quando__card revelar">
+          <small>Previsão de chegada à igreja</small><strong>18h</strong><span>do dia 9</span>
+        </article>
+      </div>
+      <p class="nota revelar">
+        Os horários poderão sofrer alterações conforme a organização e as condições do transporte.
+      </p>
+    </div>
+  </section>
+
+  <div class="faixa faixa--laranja" aria-hidden="true">
+    <div class="faixa__trilho faixa__trilho--reverso">
+      @for (r of [0, 1]; track r) {
+        @for (t of faixa; track t) {
+          <span>{{ t }}</span><b>✦</b>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- PROGRAMAÇÃO -->
+  <section id="programacao" class="secao">
+    <div class="container">
+      <div class="cabecalho revelar"><h2>Programação</h2><span class="script">Como vai ser cada dia?</span></div>
+      <div class="abas revelar" role="tablist" aria-label="Dias do acampamento">
+        @for (d of programacao; track d.dia; let i = $index) {
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="diaAtivo() === i"
+            [class.ativo]="diaAtivo() === i"
+            (click)="diaAtivo.set(i)"
+          >
+            {{ d.dia }}<small>{{ d.data }}</small>
+          </button>
+        }
+      </div>
+      @for (d of programacao; track d.dia; let i = $index) {
+        @if (diaAtivo() === i) {
+          <ul class="agenda" role="tabpanel">
+            @for (item of d.itens; track item.titulo) {
+              <li>
+                <span>{{ item.hora }}</span>
+                <div><strong>{{ item.titulo }}</strong><p>{{ item.descricao }}</p></div>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </div>
+  </section>
+
+  <!-- COMO -->
+  <section id="como" class="secao">
+    <div class="container">
+      <div class="cabecalho cabecalho--com-acao revelar">
+        <div><h2>Como?</h2><span class="script">Garanta sua vaga</span></div>
+        <div class="alternador" role="group" aria-label="Tipo de inscrição">
+          <button type="button" [class.ativo]="tipoInscricao() === 'normal'" (click)="tipoInscricao.set('normal')">Participante</button>
+          <button type="button" [class.ativo]="tipoInscricao() === 'lider'" (click)="tipoInscricao.set('lider')">Líder</button>
+        </div>
+      </div>
+
+      <div class="lotes">
+        @for (lote of lotes; track lote.numero; let i = $index) {
+          @let preco = tipoInscricao() === 'normal' ? lote.normal : lote.lider;
+          <article class="lote revelar" [class.lote--atual]="i === 0" [style.transition-delay]="i * 90 + 'ms'">
+            <span class="lote__selo">{{ lote.numero }}º lote</span>
+            @if (i === 0) {
+              <em class="lote__status">Em breve</em>
+            } @else {
+              <em class="lote__status lote__status--off">Não iniciado</em>
+            }
+            <small>{{ tipoInscricao() === 'normal' ? 'Inscrição participante' : 'Inscrição de líder' }}</small>
+            <strong class="lote__valor">{{ preco.valor | currency: 'BRL' : 'symbol' : '1.0-0' }}</strong>
+            <span class="lote__vagas">{{ preco.vagas }} vagas</span>
+          </article>
+        }
+      </div>
+
+      <div class="info-duplo">
+        <article class="caixa revelar">
+          <h3>O que está incluso</h3>
+          <ul>
+            @for (i of incluso; track i) {
+              <li>{{ i }}</li>
+            }
+          </ul>
+        </article>
+        <article class="caixa revelar">
+          <h3>Quem pode ir</h3>
+          <p>Idade mínima: <strong>12 anos</strong>.</p>
+          <p>Menores de 12 anos só participam acompanhados pelos pais ou por um responsável maior de 18 anos.</p>
+          <p>Menores de 18 anos devem entregar o <a href="#termo">termo de autorização</a> assinado.</p>
+        </article>
+      </div>
+
+      <p class="script script--laranja centro revelar">Vagas limitadas! O valor sobe quando o lote esgota.</p>
+      <div class="centro revelar"><a class="btn btn--laranja" routerLink="/inscricao">Quero me inscrever agora →</a></div>
+    </div>
+  </section>
+
+  <!-- FICHA -->
+  <section id="ficha" class="secao">
+    <div class="container chamada-ficha revelar">
+      <div>
+        <div class="cabecalho"><h2>Ficha</h2><span class="script">Leva poucos minutos</span></div>
+        <p>
+          Dados pessoais, saúde e bem-estar, responsável, vida cristã, autorização de imagem e
+          expectativas. Tenha em mãos o seu CPF e o telefone do seu responsável.
+        </p>
+      </div>
+      <a class="btn btn--laranja" routerLink="/inscricao">Preencher ficha de inscrição →</a>
+    </div>
+  </section>
+
+  <!-- TERMO -->
+  <section id="termo" class="termo container revelar">
+    <div>
+      <h2>Termo de autorização</h2>
+      <p>
+        Menores de 18 anos devem baixar o documento, preencher corretamente e entregar conforme as
+        orientações da organização.
+      </p>
+    </div>
+    <a
+      class="btn btn--escuro"
+      href="documentos/termo-de-autorizacao.pdf"
+      download="Termo de autorização - Retiro Jovem Emanuel Moriyah.pdf"
+    >
+      ⤓ Baixar termo (PDF)
+    </a>
+  </section>
+
+  <!-- DÚVIDAS -->
+  <section id="duvidas" class="secao">
+    <div class="container">
+      <div class="cabecalho revelar"><h2>Dúvidas?</h2><span class="script">A gente responde</span></div>
+      <div class="faq">
+        @for (f of faq; track f.pergunta; let i = $index) {
+          <div class="faq__item revelar" [class.aberto]="faqAberto() === i">
+            <button type="button" [attr.aria-expanded]="faqAberto() === i" [attr.aria-controls]="'faq-' + i" (click)="alternarFaq(i)">
+              {{ f.pergunta }} <span aria-hidden="true">{{ faqAberto() === i ? '−' : '+' }}</span>
+            </button>
+            <div class="faq__resposta" [id]="'faq-' + i" role="region">
+              <div><p>{{ f.resposta }}</p></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="faixa faixa--laranja" aria-hidden="true">
+  <div class="faixa__trilho">
+    @for (r of [0, 1, 2]; track r) {
+      <span>Alegria que não passa</span><b>✦</b><span>6 a 9 de fevereiro</span><b>✦</b>
+    }
+  </div>
+</div>
+
+<footer class="rodape">
+  <div class="container rodape__grade">
+    <div>
+      <a class="logo-igreja" href="#inicio">
+        <img src="img/logo-emanuel-moriyah.webp" alt="Igreja Cristã Emanuel Moriyah" width="180" height="180" />
+      </a>
+      <p>Conectados · 3ª edição Jovem<br />Ministério de Jovens da Igreja Cristã Emanuel Moriyah</p>
+    </div>
+    <div>
+      <h4>Fala com a gente</h4>
+      <a [href]="links.whatsapp" target="_blank" rel="noopener">WhatsApp: (00) 00000-0000</a>
+      <a [href]="links.igrejaMapa" target="_blank" rel="noopener">
+        Igreja Emanuel Moriyah<br />Col. Agrícola Vereda da Cruz · Arniqueira, Brasília – DF ↗
+      </a>
+    </div>
+    <div>
+      <h4>Segue a gente</h4>
+      <a [href]="links.instagramConectados" target="_blank" rel="noopener">Instagram &#64;conectados_icem</a>
+      <a [href]="links.instagramIgreja" target="_blank" rel="noopener">Instagram &#64;emanuelmoriyah</a>
+      <a href="#inicio">Voltar ao topo ↑</a>
+    </div>
+  </div>
+  <p class="rodape__copy">© 2027 Igreja Cristã Emanuel Moriyah · Conectados</p>
+</footer>

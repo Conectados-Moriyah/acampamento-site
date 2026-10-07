@@ -1,0 +1,229 @@
+<header class="barra">
+  <div class="container barra__conteudo">
+    <a class="logo" routerLink="/" aria-label="Conectados — início"><span class="marca" style="--w: 150px"><img src="img/logo-conectados.png" alt="" /></span></a>
+    <a class="voltar" routerLink="/">← Voltar ao site</a>
+  </div>
+</header>
+
+<main class="container pagina">
+  <div class="cabecalho">
+    <h1>Ficha de inscrição</h1>
+    <span class="script">Acampamento Jovem · 6 a 9 de fevereiro</span>
+  </div>
+
+  @if (enviada()) {
+    <section class="cartao fim">
+      <h2>Ficha preenchida! 🙌</h2>
+      <p>
+        Obrigado, {{ form.controls.pessoais.controls.nome.value.split(' ')[0] }}! Todos os dados
+        foram conferidos. A liderança entrará em contato pelo WhatsApp informado com as orientações
+        de pagamento.
+      </p>
+      @if (idade() !== null && idade()! < 18) {
+        <p class="aviso">
+          Como você é menor de 18 anos, lembre-se de entregar o termo de autorização assinado pelo
+          seu responsável.
+        </p>
+      }
+      <a class="btn btn--escuro" routerLink="/">Voltar ao site</a>
+    </section>
+  } @else {
+    <nav class="progresso" aria-label="Etapas da ficha">
+      <ol>
+        @for (e of etapas; track e.id; let i = $index) {
+          <li>
+            <button
+              type="button"
+              [class.ativo]="etapa() === i"
+              [class.feito]="etapa() > i"
+              [attr.aria-current]="etapa() === i ? 'step' : null"
+              (click)="irPara(i)"
+            >
+              <b>{{ i + 1 }}</b><span>{{ e.titulo }}</span>
+            </button>
+          </li>
+        }
+      </ol>
+      <div class="progresso__barra"><i [style.width.%]="((etapa() + 1) / etapas.length) * 100"></i></div>
+    </nav>
+
+    <form class="cartao" [formGroup]="form" novalidate (ngSubmit)="avancar()">
+      <h2>
+        {{ etapas[etapa()].titulo }}
+        <small>Etapa {{ etapa() + 1 }} de {{ etapas.length }}</small>
+      </h2>
+
+      @switch (etapa()) {
+        @case (0) {
+          <fieldset formGroupName="pessoais">
+            <label>
+              Nome completo *
+              <input formControlName="nome" autocomplete="name" [class.erro]="invalido('pessoais', 'nome')" />
+              @if (invalido('pessoais', 'nome')) { <em>{{ erro('pessoais', 'nome') }}</em> }
+            </label>
+            <div class="linha">
+              <label>
+                Data de nascimento *
+                <input
+                  formControlName="nascimento"
+                  inputmode="numeric"
+                  placeholder="dd/mm/aaaa"
+                  maxlength="10"
+                  autocomplete="bday"
+                  [class.erro]="invalido('pessoais', 'nascimento')"
+                  (input)="mascarar($event, 'pessoais', 'nascimento', 'data')"
+                />
+                @if (invalido('pessoais', 'nascimento')) { <em>{{ erro('pessoais', 'nascimento') }}</em> }
+              </label>
+              <label>
+                Idade
+                <input formControlName="idade" placeholder="Calculada pela data" />
+              </label>
+            </div>
+            @if (idade() !== null && idade()! < 12) {
+              <p class="aviso">Menores de 12 anos só podem participar acompanhados pelos pais ou por um responsável maior de 18 anos.</p>
+            } @else if (idade() !== null && idade()! < 18) {
+              <p class="aviso">Menores de 18 anos precisam entregar o termo de autorização assinado pelo responsável.</p>
+            }
+            <label>
+              CPF *
+              <input
+                formControlName="cpf"
+                inputmode="numeric"
+                placeholder="000.000.000-00"
+                maxlength="14"
+                [class.erro]="invalido('pessoais', 'cpf')"
+                (input)="mascarar($event, 'pessoais', 'cpf', 'cpf')"
+              />
+              @if (invalido('pessoais', 'cpf')) { <em>{{ erro('pessoais', 'cpf') }}</em> }
+            </label>
+            <div class="linha">
+              <label>
+                Telefone do inscrito (WhatsApp) *
+                <input
+                  formControlName="telefone"
+                  type="tel"
+                  placeholder="(00) 00000-0000"
+                  autocomplete="tel"
+                  [class.erro]="invalido('pessoais', 'telefone')"
+                  (input)="mascarar($event, 'pessoais', 'telefone', 'telefone')"
+                />
+                @if (invalido('pessoais', 'telefone')) { <em>{{ erro('pessoais', 'telefone') }}</em> }
+              </label>
+              <label>
+                E-mail *
+                <input formControlName="email" type="email" autocomplete="email" placeholder="voce@email.com" [class.erro]="invalido('pessoais', 'email')" />
+                @if (invalido('pessoais', 'email')) { <em>{{ erro('pessoais', 'email') }}</em> }
+              </label>
+            </div>
+          </fieldset>
+        }
+
+        @case (1) {
+          <fieldset formGroupName="saude">
+            <ng-container *ngTemplateOutlet="simNao; context: { grupo: 'saude', perguntas: perguntasSaude }" />
+            <label>
+              Existe alguma outra informação relacionada à sua saúde, alimentação ou bem-estar que a liderança precise saber?
+              <textarea formControlName="outrasInfo" rows="3"></textarea>
+            </label>
+          </fieldset>
+        }
+
+        @case (2) {
+          <fieldset formGroupName="responsavel">
+            <label>
+              Nome do pai, mãe ou responsável *
+              <input formControlName="nome" [class.erro]="invalido('responsavel', 'nome')" />
+              @if (invalido('responsavel', 'nome')) { <em>{{ erro('responsavel', 'nome') }}</em> }
+            </label>
+            <label>
+              Telefone do responsável (WhatsApp) *
+              <input formControlName="telefone" type="tel" placeholder="(00) 00000-0000" [class.erro]="invalido('responsavel', 'telefone')" (input)="mascarar($event, 'responsavel', 'telefone', 'telefone')" />
+              @if (invalido('responsavel', 'telefone')) { <em>{{ erro('responsavel', 'telefone') }}</em> }
+            </label>
+            <div class="linha">
+              <label>
+                Telefone de emergência *
+                <input formControlName="emergencia1" type="tel" placeholder="(00) 00000-0000" [class.erro]="invalido('responsavel', 'emergencia1')" (input)="mascarar($event, 'responsavel', 'emergencia1', 'telefone')" />
+                @if (invalido('responsavel', 'emergencia1')) { <em>{{ erro('responsavel', 'emergencia1') }}</em> }
+              </label>
+              <label>
+                Outro telefone de emergência
+                <input formControlName="emergencia2" type="tel" placeholder="(00) 00000-0000" [class.erro]="invalido('responsavel', 'emergencia2')" (input)="mascarar($event, 'responsavel', 'emergencia2', 'telefone')" />
+                @if (invalido('responsavel', 'emergencia2')) { <em>{{ erro('responsavel', 'emergencia2') }}</em> }
+              </label>
+            </div>
+          </fieldset>
+        }
+
+        @case (3) {
+          <fieldset formGroupName="igreja">
+            <ng-container *ngTemplateOutlet="simNao; context: { grupo: 'igreja', perguntas: perguntasIgreja }" />
+          </fieldset>
+        }
+
+        @case (4) {
+          <fieldset formGroupName="imagem">
+            <div class="pergunta" role="radiogroup" aria-labelledby="p-imagem">
+              <p id="p-imagem">
+                Você autoriza o uso da sua imagem em fotos e vídeos realizados durante o acampamento
+                para fins de divulgação do evento e das atividades da igreja? *
+              </p>
+              <div class="opcoes">
+                <label class="opcao"><input type="radio" formControlName="autoriza" value="sim" /> Sim, autorizo</label>
+                <label class="opcao"><input type="radio" formControlName="autoriza" value="nao" /> Não autorizo</label>
+              </div>
+              @if (invalido('imagem', 'autoriza')) { <em>Escolha uma opção.</em> }
+            </div>
+          </fieldset>
+        }
+
+        @case (5) {
+          <fieldset formGroupName="expectativas">
+            <label>
+              O que você espera receber de Deus neste acampamento? *
+              <textarea formControlName="espera" rows="4" [class.erro]="invalido('expectativas', 'espera')"></textarea>
+              @if (invalido('expectativas', 'espera')) { <em>{{ erro('expectativas', 'espera') }}</em> }
+            </label>
+            <label>
+              Existe algo que você gostaria de compartilhar com a liderança antes do acampamento?
+              <textarea formControlName="compartilhar" rows="4"></textarea>
+            </label>
+          </fieldset>
+        }
+      }
+
+      <ng-template #simNao let-grupo="grupo" let-perguntas="perguntas">
+        <div [formGroup]="$any(form.get(grupo))" class="perguntas">
+          @for (p of perguntas; track p.campo) {
+            <div class="pergunta" role="radiogroup" [attr.aria-labelledby]="'p-' + p.campo">
+              <p [id]="'p-' + p.campo">{{ p.texto }} *</p>
+              <div class="opcoes">
+                <label class="opcao"><input type="radio" [formControlName]="p.campo" value="sim" /> Sim</label>
+                <label class="opcao"><input type="radio" [formControlName]="p.campo" value="nao" /> Não</label>
+              </div>
+              @if (invalido(grupo, p.campo)) { <em>Escolha uma opção.</em> }
+              @if (p.detalhe && campo(grupo, p.campo).value === 'sim') {
+                <label class="detalhe">
+                  {{ p.detalhe.rotulo }} *
+                  <input [formControlName]="p.detalhe.campo" [class.erro]="invalido(grupo, p.detalhe.campo)" />
+                  @if (invalido(grupo, p.detalhe.campo)) { <em>{{ erro(grupo, p.detalhe.campo) }}</em> }
+                </label>
+              }
+            </div>
+          }
+        </div>
+      </ng-template>
+
+      <div class="acoes">
+        @if (etapa() > 0) {
+          <button class="btn btn--contorno-escuro" type="button" (click)="voltar()">← Voltar</button>
+        }
+        <button class="btn btn--escuro" type="submit">
+          {{ etapa() === etapas.length - 1 ? 'Enviar ficha' : 'Continuar →' }}
+        </button>
+      </div>
+      <p class="obs">* Campos obrigatórios</p>
+    </form>
+  }
+</main>
