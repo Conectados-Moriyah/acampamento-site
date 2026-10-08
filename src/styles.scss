@@ -19,12 +19,14 @@
   --fonte-corpo: 'Inter', system-ui, sans-serif;
   --suave: cubic-bezier(0.22, 1, 0.36, 1);
   --topo-altura: 64px;
+  --whatsapp: #25d366;
 }
 
 * { box-sizing: border-box; }
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip; // no celular, só o body com hidden ainda deixava a página rolar para o lado
   scroll-padding-top: calc(var(--topo-altura) + 12px);
 }
 
@@ -34,7 +36,7 @@ body {
   color: var(--branco);
   background: var(--fundo);
   line-height: 1.6;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 h1, h2, h3, h4 {
@@ -98,11 +100,14 @@ button { font: inherit; cursor: pointer; }
   &--contorno-escuro { border-color: var(--azul-900); color: var(--azul-900); background: transparent; box-shadow: none; }
 }
 
+.icone-ig { vertical-align: -0.2em; margin-right: 4px; }
+
 .script {
   font-family: var(--fonte-script);
   color: var(--ciano);
   font-size: 1rem;
   &--laranja { color: var(--laranja); }
+  &--branco { color: var(--branco); font-size: 1.4rem; }
 }
 
 /* ---------- Topo ---------- */
@@ -366,6 +371,12 @@ button { font: inherit; cursor: pointer; }
   ul { margin: 0; padding-left: 18px; li::marker { color: var(--laranja); } }
   p, li { color: var(--texto-claro); font-size: 0.92rem; margin: 6px 0; }
   a { color: var(--ciano); }
+  &--alerta { border-color: var(--laranja); h3 { color: var(--laranja); } }
+}
+.recomendacoes {
+  margin-top: 0;
+  h4 { margin: 14px 0 2px; font-size: 0.95rem; color: var(--ciano); text-transform: uppercase; letter-spacing: 0.04em; }
+  ol { margin: 0; padding-left: 22px; li::marker { color: var(--laranja); font-weight: 700; } }
 }
 
 /* ---------- Ficha ---------- */
@@ -458,8 +469,9 @@ button { font: inherit; cursor: pointer; }
 
 /* Logo original é preta em fundo branco: inverter + "screen" some com o fundo sobre o rodapé escuro. */
 .logo-igreja {
-  display: block; width: 200px; height: 130px; overflow: hidden; margin-bottom: 12px;
-  img { display: block; width: 324px; max-width: none; height: auto; margin: -96px 0 0 -50px; filter: invert(1); mix-blend-mode: screen; }
+  display: block; width: 150px; height: 100px; overflow: hidden; margin-bottom: 12px;
+  /* A imagem tem muita margem branca: o recorte guarda ~2% de folga em cada lado do desenho. */
+  img { display: block; width: 228px; max-width: none; height: auto; margin: -57px 0 0 -32px; filter: invert(1); mix-blend-mode: screen; }
 }
 
 /* Logo Conectados: PNG 1920×1080 com bastante margem; o recorte mostra só a área do desenho. */
@@ -471,3 +483,12 @@ button { font: inherit; cursor: pointer; }
   &--hero { --w: min(640px, 88vw); margin: 0 auto; filter: drop-shadow(0 0 18px rgba(79, 209, 255, 0.55)); }
 }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- WhatsApp flutuante ---------- */
+.whatsapp-flutuante {
+  position: fixed; right: 20px; bottom: 20px; z-index: 60;
+  width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--whatsapp); color: var(--branco); box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
+  transition: transform 0.3s var(--suave);
+  &:hover { transform: scale(1.08); }
+}

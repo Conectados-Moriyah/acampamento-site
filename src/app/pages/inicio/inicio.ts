@@ -13,16 +13,7 @@ import {
 interface Lote {
   numero: number;
   normal: { valor: number; vagas: number };
-  lider: { valor: number; vagas: number };
 }
-
-interface DiaProgramacao {
-  dia: string;
-  data: string;
-  itens: { hora: string; titulo: string; descricao: string }[];
-}
-
-type TipoInscricao = 'normal' | 'lider';
 
 /** Início do acampamento: saída da igreja, 6 de fevereiro às 10h (horário de Brasília). */
 const INICIO_EVENTO = new Date('2027-02-06T10:00:00-03:00').getTime();
@@ -59,53 +50,54 @@ export class Inicio {
   ];
 
   protected readonly lotes: Lote[] = [
-    { numero: 1, normal: { valor: 350, vagas: 37 }, lider: { valor: 250, vagas: 20 } },
-    { numero: 2, normal: { valor: 400, vagas: 37 }, lider: { valor: 280, vagas: 10 } },
-    { numero: 3, normal: { valor: 450, vagas: 37 }, lider: { valor: 310, vagas: 10 } },
+    { numero: 1, normal: { valor: 350, vagas: 37 } },
+    { numero: 2, normal: { valor: 400, vagas: 37 } },
+    { numero: 3, normal: { valor: 450, vagas: 37 } },
   ];
 
-  protected readonly programacao: DiaProgramacao[] = [
+  protected readonly naoLevar = [
+    'Roupas inapropriadas.',
+    'Aparelhos eletrônicos desnecessários.',
+    'Jogos que não edificam.',
+    'Armas de brinquedo ou itens perigosos.',
+    'Bebidas alcoólicas ou qualquer tipo de drogas ilícitas.',
+  ];
+
+  protected readonly levar = [
     {
-      dia: 'Sábado',
-      data: '06/02',
+      titulo: 'Roupas',
       itens: [
-        { hora: '10h', titulo: 'Saída da igreja', descricao: 'Encontro no estacionamento e embarque nos ônibus.' },
-        { hora: 'Tarde', titulo: 'Chegada e acomodação', descricao: 'Check-in, divisão dos quartos e boas-vindas.' },
-        { hora: 'Noite', titulo: 'Culto de abertura', descricao: 'Louvor e palavra para começar com tudo.' },
+        'Roupas confortáveis e adequadas (lembrando que somos representantes de Cristo).',
+        'Roupas para esportes/dinâmicas.',
+        'Roupas de frio (pode esfriar à noite).',
+        'Roupa de banho (decente/modesta).',
+        'Roupa especial para o Culto de Encerramento (estilo social ou camiseta do retiro).',
+        'Chinelo e tênis.',
+        'Repelente e medicamentos de uso pessoal ⚠️',
+        'Roupas de cama: cobertor, travesseiro, etc.',
       ],
     },
     {
-      dia: 'Domingo',
-      data: '07/02',
-      itens: [
-        { hora: 'Manhã', titulo: 'Devocional e café', descricao: 'Começando o dia na presença de Deus.' },
-        { hora: 'Tarde', titulo: 'Gincanas', descricao: 'Equipes, provas e muita disputa saudável.' },
-        { hora: 'Noite', titulo: 'Culto', descricao: 'Ministração e tempo de adoração.' },
-      ],
+      titulo: 'Higiene pessoal',
+      itens: ['Sabonete, shampoo, escova de dente, pasta, desodorante, toalha, etc.'],
     },
-    {
-      dia: 'Segunda',
-      data: '08/02',
-      itens: [
-        { hora: 'Manhã', titulo: 'Oficinas', descricao: 'Grupos de conversa e estudo bíblico.' },
-        { hora: 'Tarde', titulo: 'Esportes e lazer', descricao: 'Piscina, futebol, vôlei e tempo livre.' },
-        { hora: 'Noite', titulo: 'Noite de louvor', descricao: 'Um culto especial de celebração.' },
-      ],
-    },
-    {
-      dia: 'Terça',
-      data: '09/02',
-      itens: [
-        { hora: 'Manhã', titulo: 'Culto de encerramento', descricao: 'Envio e oração pela juventude.' },
-        { hora: 'Tarde', titulo: 'Retorno', descricao: 'Embarque de volta para a igreja.' },
-        { hora: '18h', titulo: 'Chegada à igreja', descricao: 'Previsão de chegada. Os pais podem buscar no local.' },
-      ],
-    },
+  ];
+
+  protected readonly regras = [
+    'Respeito à liderança e aos colegas.',
+    'Respeitar separação por sexo.',
+    'Zelar pelo ambiente e pela limpeza.',
+    'Horários devem ser respeitados.',
+    'Proibido namoro escondido ou entrar no dormitório do sexo oposto.',
+    'Ambiente proibido de palavrão, fofoca e bullying.',
+    'Este é um tempo para buscar a Deus — desconecte-se das distrações!',
+    'Evite demonstrações excessivas de afeto.',
   ];
 
   protected readonly incluso = [
     'Hospedagem durante os 4 dias',
-    'Alimentação completa',
+    'Alimentação completa: café da manhã, almoço e jantar',
+    'Dormitórios separados por sexo',
     'Transporte de ida e volta',
     'Acesso a todas as atividades, cultos e gincanas',
     'Kit do acampante',
@@ -131,21 +123,15 @@ export class Inicio {
       pergunta: 'Quais são as formas de pagamento?',
       resposta: 'As formas de pagamento serão divulgadas quando as inscrições forem abertas.',
     },
-    {
-      pergunta: 'Qual a diferença entre participante e líder?',
-      resposta:
-        'A inscrição de líder é destinada a quem serve na organização e cuidado dos jovens durante o acampamento, com valor e número de vagas próprios.',
-    },
   ];
 
-  // TODO: falta o número do WhatsApp.
   protected readonly links = {
     mapa: 'https://maps.app.goo.gl/Xu1ZP4grwWEaTU6a9',
     instagramLocal: 'https://www.instagram.com/villagalobsb/',
     instagramConectados: 'https://www.instagram.com/conectados_icem/',
     instagramIgreja: 'https://www.instagram.com/emanuelmoriyah/',
     igrejaMapa: 'https://maps.app.goo.gl/tPZR64uJ4TNGmBQ18',
-    whatsapp: 'https://wa.me/',
+    whatsapp: 'https://wa.me/5561999073219',
   };
 
   protected readonly menuAberto = signal(false);
@@ -156,8 +142,6 @@ export class Inicio {
   protected readonly totalSlides = 4;
   protected readonly slides = Array.from({ length: this.totalSlides }, (_, i) => i);
 
-  protected readonly diaAtivo = signal(0);
-  protected readonly tipoInscricao = signal<TipoInscricao>('normal');
   protected readonly faqAberto = signal<number | null>(0);
 
   private readonly agora = signal(Date.now());
