@@ -1,0 +1,82 @@
+<div class="fundo" (click)="fechar.emit()"></div>
+<aside class="painel" role="dialog" aria-modal="true" aria-labelledby="titulo-editar">
+  <header>
+    <h2 id="titulo-editar">{{ inscricao().nome }}</h2>
+    <button class="fechar" type="button" aria-label="Fechar" (click)="fechar.emit()">×</button>
+  </header>
+
+  <form (ngSubmit)="salvar()">
+    <fieldset [formGroup]="controle">
+      <legend>Controle</legend>
+      <div class="grade">
+        <label>Tipo
+          <select formControlName="tipo">
+            <option value="participante">Participante</option>
+            <option value="lider">Líder</option>
+          </select>
+        </label>
+        <label>Status
+          <select formControlName="status">
+            <option value="pendente">Pendente</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </label>
+        <label>Pagamento
+          <select formControlName="forma_pagamento">
+            <option value="avista">À vista</option>
+            <option value="carne">Carnê</option>
+          </select>
+        </label>
+        <label>Valor (R$)
+          <input formControlName="valor" inputmode="decimal" placeholder="0,00" />
+        </label>
+        @if (inscricao().lote_numero) {
+          <label>Lote <input [value]="inscricao().lote_numero + 'º lote'" disabled /></label>
+        }
+      </div>
+      <label>Observação interna
+        <textarea formControlName="observacao" rows="2"></textarea>
+      </label>
+    </fieldset>
+
+    @for (etapa of etapas; track etapa.id) {
+      <fieldset [formGroup]="grupo(etapa.id)">
+        <legend>{{ etapa.titulo }}</legend>
+        <div class="grade">
+          @for (c of campos(etapa); track c[0]) {
+            <label [class.largo]="c[0] === 'outrasInfo' || c[0] === 'espera' || c[0] === 'compartilhar'">
+              {{ c[1] }}
+              @if (c[0] === 'declaracao' || c[0] === 'consentimento') {
+                <!-- Aceite da própria pessoa: o admin só consulta. -->
+                <input [value]="textoValor(grupo(etapa.id).value[c[0]])" disabled />
+              } @else if (simNao.has(c[0])) {
+                <select [formControlName]="c[0]">
+                  <option value="">—</option>
+                  <option value="sim">Sim</option>
+                  <option value="nao">Não</option>
+                </select>
+              } @else if (c[0] === 'genero') {
+                <select [formControlName]="c[0]">
+                  <option value="">—</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="feminino">Feminino</option>
+                </select>
+              } @else {
+                <input [formControlName]="c[0]" />
+              }
+            </label>
+          }
+        </div>
+      </fieldset>
+    }
+
+    @if (erro()) { <p class="erro" role="alert">{{ erro() }}</p> }
+    <div class="acoes">
+      <button class="btn btn--contorno" type="button" (click)="fechar.emit()">Cancelar</button>
+      <button class="btn btn--azul" type="submit" [disabled]="salvando()">
+        {{ salvando() ? 'Salvando…' : 'Salvar' }}
+      </button>
+    </div>
+  </form>
+</aside>

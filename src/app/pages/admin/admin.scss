@@ -1,0 +1,78 @@
+.admin {
+  min-height: 100vh; padding: 32px 16px; background: var(--azul-950); color: var(--branco);
+  &--centro { display: grid; place-items: center; }
+  h1 { margin: 0; }
+
+  &__cartao {
+    width: min(380px, 100%); display: grid; gap: 16px; padding: 28px;
+    background: var(--azul-800); border: 2px solid var(--ciano);
+    label { display: grid; gap: 6px; }
+    input { padding: 10px 12px; font: inherit; border: 2px solid var(--azul-500); background: var(--branco); color: var(--azul-900); }
+  }
+  &__erro { margin: 0; color: var(--laranja); }
+
+  &__titulo { margin-bottom: 20px !important; font-size: clamp(1.5rem, 4vw, 2rem); }
+  &__tabela {
+    width: 100%; border-collapse: collapse; display: block; overflow-x: auto;
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--azul-800); white-space: nowrap; }
+    th { color: var(--ciano); }
+  }
+  &__cards {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px;
+    div { padding: 12px; background: var(--azul-800); color: var(--texto-claro); }
+    strong { display: block; font-size: 1.6rem; color: var(--branco); }
+  }
+  &__filtros {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
+    input { flex: 1 1 220px; }
+    input, select { padding: 8px 10px; font: inherit; color: var(--azul-900); background: var(--branco); border: 2px solid var(--azul-500); }
+  }
+  &__status {
+    padding: 4px 6px; font: inherit; border: 0; color: var(--azul-900); background: var(--laranja);
+    &[data-status='confirmada'] { background: var(--ciano); }
+    &[data-status='cancelada'] { background: var(--azul-500); color: var(--branco); }
+  }
+  &__cancelada td { opacity: 0.55; }
+  &__quitado { color: var(--ciano); font-weight: 700; }
+  &__link { background: none; border: 0; color: var(--ciano); cursor: pointer; font: inherit; text-decoration: underline; }
+
+  /* ---------- Layout com menu lateral ---------- */
+  &__layout {
+    display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100vh; background: var(--azul-950);
+    > .admin { min-height: 0; padding: 32px clamp(16px, 3vw, 40px); }
+  }
+  &__menu {
+    position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 24px;
+    padding: 24px 12px; background: var(--azul-900); border-right: 2px solid var(--azul-800); color: var(--branco);
+    nav { display: grid; gap: 4px; }
+    nav button, .admin__usuario button {
+      padding: 10px 14px; font: inherit; text-align: left; color: var(--texto-claro);
+      background: none; border: 0; border-left: 3px solid transparent; cursor: pointer;
+      &:hover { color: var(--branco); background: var(--azul-800); }
+    }
+    nav .ativo { color: var(--branco); background: var(--azul-800); border-left-color: var(--ciano); }
+  }
+  &__marca { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
+  &__hamburguer { display: none; background: none; border: 0; color: var(--branco); font-size: 1.6rem; cursor: pointer; }
+  &__usuario {
+    margin-top: auto; display: grid; gap: 6px; padding-top: 16px; border-top: 1px solid var(--azul-800);
+    small { padding: 0 14px; color: var(--texto-claro); overflow-wrap: anywhere; }
+    button { color: var(--laranja) !important; }
+  }
+
+  /* Celular: menu vira barra no topo; o ☰ mostra navegação e Sair. */
+  @media (max-width: 768px) {
+    &__layout { grid-template-columns: 1fr; }
+    &__layout > .admin { padding: 20px 16px; }
+    &__menu {
+      position: sticky; z-index: 70; height: auto; gap: 0; padding: 12px;
+      border-right: 0; border-bottom: 2px solid var(--azul-800);
+      nav, .admin__usuario { display: none; }
+      &.aberto nav, &.aberto .admin__usuario { display: grid; margin-top: 12px; }
+    }
+    &__marca { padding: 0 4px; }
+    &__hamburguer { display: block; }
+    &__filtros > * { flex: 1 1 100%; }
+    &__cards { grid-template-columns: repeat(2, 1fr); }
+  }
+}

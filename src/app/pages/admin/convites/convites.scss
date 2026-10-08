@@ -1,0 +1,37 @@
+:host { display: block; margin-bottom: 24px; }
+
+.painel { padding: 16px; background: var(--azul-800); border: 1px solid var(--azul-500); }
+h3 { margin: 0 0 6px; font-size: 1.05rem; color: var(--ciano); }
+h4 { margin: 0; font-size: 0.95rem; }
+.nota { margin: 0 0 12px; font-size: 0.9rem; color: var(--texto-claro); }
+
+.linha { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+label { display: grid; gap: 4px; flex: 0 1 170px; min-width: 0; font-size: 0.85rem; color: var(--texto-claro); }
+.largo { flex: 1 1 240px; }
+input, select {
+  width: 100%; min-width: 0; box-sizing: border-box; padding: 8px 10px; font: inherit;
+  color: var(--azul-900); background: var(--branco); border: 2px solid var(--azul-500);
+}
+
+.novo {
+  display: grid; gap: 8px; margin-top: 14px; padding: 12px; border: 2px dashed var(--ciano);
+  p { margin: 0; }
+  code { overflow-wrap: anywhere; font-size: 0.85rem; color: var(--branco); }
+}
+
+.cabecalho { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 18px 0 8px; }
+
+.links { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.links li {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 8px 10px;
+  background: var(--azul-950); border-left: 3px solid var(--laranja);
+  &[data-situacao='usado'] { border-left-color: var(--ciano); }
+  &[data-situacao='cancelado'] { border-left-color: var(--azul-500); opacity: 0.6; }
+}
+.tipo { min-width: 90px; font-weight: 700; }
+.quem { flex: 1 1 180px; small { display: block; color: var(--texto-claro); } }
+.estado { color: var(--texto-claro); }
+
+.acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.link { padding: 0; background: none; border: 0; font: inherit; color: var(--ciano); text-decoration: underline; cursor: pointer;
+  &--perigo { color: var(--laranja); } }

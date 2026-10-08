@@ -1,0 +1,100 @@
+@let r = resumo();
+<div class="saldos">
+  <section class="saldo">
+    <h3>Caixa de inscrições</h3>
+    <strong>{{ r.inscricao.saldo | currency: 'BRL' }}</strong>
+    <p><span class="mais">+ {{ r.inscricao.entradas | currency: 'BRL' }}</span> <span class="menos">− {{ r.inscricao.saidas | currency: 'BRL' }}</span></p>
+  </section>
+  <section class="saldo">
+    <h3>Caixa de doações</h3>
+    <strong>{{ r.doacao.saldo | currency: 'BRL' }}</strong>
+    <p><span class="mais">+ {{ r.doacao.entradas | currency: 'BRL' }}</span> <span class="menos">− {{ r.doacao.saidas | currency: 'BRL' }}</span></p>
+    <p class="nota">Reservado em cupons: {{ r.doacao.reservado | currency: 'BRL' }} · Livre: {{ r.doacao.disponivel | currency: 'BRL' }}</p>
+  </section>
+  <section class="saldo saldo--total">
+    <h3>Total em caixa</h3>
+    <strong>{{ r.total | currency: 'BRL' }}</strong>
+  </section>
+</div>
+
+<form class="novo" [formGroup]="form" (ngSubmit)="salvar()">
+  <h3>Novo lançamento</h3>
+  <div class="grade">
+    <label>Tipo
+      <select formControlName="tipo">
+        <option value="entrada">Entrada</option>
+        <option value="saida">Saída</option>
+      </select>
+    </label>
+    <label>Caixa
+      <select formControlName="caixa">
+        <option value="inscricao">Inscrições</option>
+        <option value="doacao">Doações</option>
+      </select>
+    </label>
+    <label>Data <input type="date" formControlName="data" /></label>
+    <label>Valor (R$) <input formControlName="valor" inputmode="decimal" placeholder="0,00" /></label>
+    <label>Forma
+      <select formControlName="forma">
+        <option value="pix">Pix</option>
+        <option value="dinheiro">Dinheiro</option>
+        <option value="cartao">Cartão</option>
+        <option value="outro">Outro</option>
+      </select>
+    </label>
+    @if (form.value.caixa === 'inscricao') {
+      <label>Inscrito (opcional)
+        <select formControlName="inscricao_id" (change)="escolherInscrito(valor($event))">
+          <option value="">—</option>
+          @for (i of inscricoesAtivas(); track i.id) {
+            <option [value]="i.id">{{ i.nome }}</option>
+          }
+        </select>
+      </label>
+    }
+    <label class="largo">Descrição
+      <input formControlName="descricao" placeholder="Ex.: Inscrição de Fulano, Compra de material, Oferta da igreja" />
+    </label>
+  </div>
+  @if (erro()) { <p class="erro" role="alert">{{ erro() }}</p> }
+  <button class="btn btn--azul" type="submit" [disabled]="salvando()">{{ salvando() ? 'Salvando…' : 'Lançar' }}</button>
+</form>
+
+<div class="cabecalho">
+  <h3>Lançamentos</h3>
+  <select [value]="filtroCaixa()" (change)="filtroCaixa.set($any(valor($event)))">
+    <option value="">Todos os caixas</option>
+    <option value="inscricao">Inscrições</option>
+    <option value="doacao">Doações</option>
+  </select>
+</div>
+
+@if (filtrados().length === 0) {
+  <p class="nota">Nenhum lançamento.</p>
+} @else {
+  <div class="rolagem">
+    <table>
+      <thead>
+        <tr><th>Data</th><th>Caixa</th><th>Descrição</th><th>Forma</th><th class="num">Valor</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (m of filtrados(); track m.id) {
+          <tr>
+            <td>{{ m.data | date: 'dd/MM/yy' }}</td>
+            <td>{{ m.caixa === 'doacao' ? 'Doações' : 'Inscrições' }}</td>
+            <td>{{ m.descricao }}@if (nome(m.inscricao_id) && !m.descricao.includes(nome(m.inscricao_id))) { <small> · {{ nome(m.inscricao_id) }}</small> }</td>
+            <td>{{ m.forma ?? '—' }}</td>
+            <td class="num" [class.mais]="m.tipo === 'entrada'" [class.menos]="m.tipo === 'saida'">
+              {{ m.tipo === 'entrada' ? '+' : '−' }} {{ m.valor | currency: 'BRL' }}
+            </td>
+            <td>
+              @if (!m.cupom_id) {
+                <button class="excluir" type="button" aria-label="Excluir lançamento" (click)="excluir(m)">×</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

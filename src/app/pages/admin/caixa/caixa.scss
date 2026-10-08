@@ -1,0 +1,38 @@
+:host { display: block; }
+
+h3 { margin: 0 0 10px; font-size: 1.05rem; color: var(--ciano); }
+.nota { margin: 4px 0 0; font-size: 0.85rem; color: var(--texto-claro); }
+.mais { color: var(--ciano); }
+.menos { color: var(--laranja); }
+
+.saldos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px; margin-bottom: 24px; }
+.saldo {
+  padding: 16px; background: var(--azul-800); border: 1px solid var(--azul-500);
+  strong { display: block; font-size: 1.8rem; }
+  p { margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 12px; }
+  &--total { border-color: var(--ciano); }
+}
+
+.novo { padding: 16px; margin-bottom: 24px; background: var(--azul-800); }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr)); gap: 10px; margin-bottom: 12px; }
+.largo { grid-column: 1 / -1; }
+label { display: grid; gap: 4px; min-width: 0; font-size: 0.85rem; color: var(--texto-claro); }
+input, select {
+  width: 100%; min-width: 0; box-sizing: border-box; padding: 8px 10px; font: inherit;
+  color: var(--azul-900); background: var(--branco); border: 2px solid var(--azul-500);
+}
+.erro { color: var(--laranja); }
+
+.cabecalho {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;
+  h3 { margin: 0; }
+  select { width: auto; }
+}
+
+.rolagem { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--azul-800); }
+th { color: var(--ciano); white-space: nowrap; }
+td small { color: var(--texto-claro); }
+.num { text-align: right; white-space: nowrap; }
+.excluir { background: none; border: 0; color: var(--texto-claro); font-size: 1.3rem; cursor: pointer; &:hover { color: var(--laranja); } }

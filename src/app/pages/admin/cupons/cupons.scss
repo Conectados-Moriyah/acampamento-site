@@ -1,0 +1,31 @@
+:host { display: block; }
+
+h3 { margin: 0 0 10px; font-size: 1.05rem; color: var(--ciano); }
+.nota { margin: 0 0 12px; color: var(--texto-claro); strong { color: var(--branco); } }
+.erro { color: var(--laranja); }
+code { font-size: 0.95rem; letter-spacing: 0.05em; color: var(--branco); }
+
+.gerar { padding: 16px; margin-bottom: 24px; background: var(--azul-800); }
+.linha { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+label { display: grid; gap: 4px; flex: 0 1 160px; min-width: 0; font-size: 0.85rem; color: var(--texto-claro); }
+.largo { flex: 1 1 260px; }
+input, select {
+  width: 100%; min-width: 0; box-sizing: border-box; padding: 8px 10px; font: inherit;
+  color: var(--azul-900); background: var(--branco); border: 2px solid var(--azul-500);
+}
+.novo { margin: 12px 0 0; padding: 10px 12px; border: 2px dashed var(--ciano); }
+
+.rolagem { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--azul-800); }
+th { color: var(--ciano); white-space: nowrap; }
+.num { text-align: right; white-space: nowrap; }
+.inativo td { opacity: 0.6; }
+
+.selo { padding: 2px 8px; font-size: 0.8rem; color: var(--azul-900); background: var(--ciano);
+  &[data-status='usado'] { background: var(--azul-500); color: var(--branco); }
+  &[data-status='cancelado'] { background: transparent; color: var(--texto-claro); border: 1px solid; } }
+
+.acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; select { width: auto; max-width: 220px; } }
+.link { padding: 0; background: none; border: 0; font: inherit; color: var(--ciano); text-decoration: underline; cursor: pointer;
+  &--perigo { color: var(--laranja); } }

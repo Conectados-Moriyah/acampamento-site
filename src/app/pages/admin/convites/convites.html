@@ -1,0 +1,76 @@
+<section class="painel">
+  @if (modo() === 'carne') {
+    <h3>Link de inscrição via carnê</h3>
+    <p class="nota">
+      Gere um link de uso único e envie para a pessoa. A ficha é gravada sem pagamento no site e aparece
+      abaixo, em Carnês, para você gerar as parcelas.
+    </p>
+  } @else {
+    <h3>Link de inscrição de {{ tipo() === 'lider' ? 'líder' : 'participante' }}</h3>
+    <p class="nota">
+      Gere um link de uso único e envie para a pessoa. Ela preenche a ficha e, ao final, escolhe a forma
+      de pagamento no checkout online.
+    </p>
+  }
+
+  <form class="linha" (submit)="$event.preventDefault(); gerar()">
+    @if (!tipoFixo()) {
+      <label>Tipo
+        <select [value]="tipo()" (change)="tipoEscolhido.set($any(texto($event)))">
+          <option value="participante">Participante</option>
+          <option value="lider">Líder</option>
+        </select>
+      </label>
+    }
+    <label class="largo">Para quem (opcional)
+      <input placeholder="Ex.: Maria da célula Centro" [value]="observacao()" (input)="observacao.set(texto($event))" />
+    </label>
+    <button class="btn btn--azul" type="submit" [disabled]="gerando()">{{ gerando() ? 'Gerando…' : 'Gerar link' }}</button>
+  </form>
+
+  @if (novo(); as n) {
+    <div class="novo" role="status">
+      <p>Link de {{ n.tipo === 'lider' ? 'líder' : 'participante' }} criado{{ n.observacao ? ' para ' + n.observacao : '' }}:</p>
+      <code>{{ link(n) }}</code>
+      <div class="acoes">
+        <button class="btn btn--azul btn--sm" type="button" (click)="copiar(n)">{{ copiado() === n.token ? 'Copiado!' : 'Copiar link' }}</button>
+        <a class="btn btn--contorno btn--sm" [href]="whatsapp(n)" target="_blank" rel="noopener">Enviar no WhatsApp</a>
+      </div>
+    </div>
+  }
+
+  <div class="cabecalho">
+    <h4>{{ mostrarTodos() ? 'Todos os links' : 'Aguardando preenchimento' }} ({{ lista().length }})</h4>
+    <button class="link" type="button" (click)="mostrarTodos.set(!mostrarTodos())">
+      {{ mostrarTodos() ? 'Só os que aguardam' : 'Ver usados e cancelados' }}
+    </button>
+  </div>
+
+  @if (lista().length) {
+    <ul class="links">
+      @for (c of lista(); track c.token) {
+        @let s = situacao(c);
+        <li [attr.data-situacao]="s">
+          <span class="tipo">{{ c.tipo === 'lider' ? 'Líder' : 'Participante' }}</span>
+          <span class="quem">
+            {{ c.observacao ?? 'Sem identificação' }}
+            <small>criado {{ c.criado_em | date: 'dd/MM/yy HH:mm' }}</small>
+          </span>
+          @switch (s) {
+            @case ('usado') { <span class="estado">Preenchido por {{ nome(c.inscricao_id) || '—' }}</span> }
+            @case ('cancelado') { <span class="estado">Cancelado</span> }
+            @default {
+              <span class="acoes">
+                <button class="link" type="button" (click)="copiar(c)">{{ copiado() === c.token ? 'Copiado!' : 'Copiar' }}</button>
+                <a class="link" [href]="whatsapp(c)" target="_blank" rel="noopener">WhatsApp</a>
+                <button class="link link--perigo" type="button" (click)="cancelar(c)">Cancelar</button>
+              </span>
+            }
+          }
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="nota">Nenhum link{{ mostrarTodos() ? '' : ' aguardando' }}.</p>
+  }
+</section>

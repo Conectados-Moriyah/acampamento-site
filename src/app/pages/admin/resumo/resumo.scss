@@ -1,0 +1,20 @@
+:host { display: block; }
+
+h2 { margin: 32px 0 12px; }
+.nota { color: var(--texto-claro); margin: 0 0 16px; }
+
+.grupos { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+.bloco {
+  padding: 16px; background: var(--azul-800); border: 1px solid var(--azul-500);
+  h3 { margin: 0 0 12px; font-size: 1.05rem; color: var(--ciano); }
+  small { color: var(--texto-claro); font-weight: 400; }
+  ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+  li small { display: block; }
+}
+
+.barra {
+  position: relative; display: flex; justify-content: space-between; gap: 8px;
+  padding: 6px 8px; margin-bottom: 6px; isolation: isolate; text-transform: capitalize;
+  i { position: absolute; inset: 0 auto 0 0; z-index: -1; background: var(--azul-500); }
+}

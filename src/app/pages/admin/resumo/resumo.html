@@ -1,0 +1,42 @@
+<p class="nota">{{ total() }} inscrições ativas (canceladas não entram no resumo).</p>
+
+<div class="grupos">
+  @for (g of grupos(); track g.titulo) {
+    <section class="bloco">
+      <h3>{{ g.titulo }}</h3>
+      @for (item of g.itens; track item.rotulo) {
+        <div class="barra">
+          <span>{{ item.rotulo }}</span>
+          <strong>{{ item.total }}</strong>
+          <i [style.width.%]="porcentagem(item.total)"></i>
+        </div>
+      }
+    </section>
+  }
+</div>
+
+<h2>Saúde e particularidades</h2>
+<div class="grupos">
+  @for (s of saude(); track s.titulo) {
+    <section class="bloco">
+      <h3>{{ s.titulo }} <small>({{ s.pessoas.length }})</small></h3>
+      @if (s.pessoas.length === 0) {
+        <p class="nota">Ninguém.</p>
+      } @else {
+        <ul>
+          @for (p of s.pessoas; track $index) {
+            <li><strong>{{ p.nome }}</strong>@if (p.detalhe) { — {{ p.detalhe }} } <small>{{ p.telefone }}</small></li>
+          }
+        </ul>
+      }
+    </section>
+  }
+  <section class="bloco">
+    <h3>Menores de 18 (termo de autorização) <small>({{ menores().length }})</small></h3>
+    <ul>
+      @for (p of menores(); track $index) {
+        <li><strong>{{ p.nome }}</strong> — {{ p.detalhe }} <small>{{ p.telefone }}</small></li>
+      }
+    </ul>
+  </section>
+</div>

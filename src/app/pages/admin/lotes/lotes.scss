@@ -1,0 +1,40 @@
+:host { display: block; }
+
+.nota { color: var(--texto-claro); margin: 0 0 16px; }
+h2 { margin: 28px 0 12px; font-size: 1.3rem; }
+
+.lotes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 16px; }
+
+/* "cartao" e não "lote": a classe global .lote (preços da página inicial) vazaria para cá. */
+.cartao {
+  display: grid; gap: 10px; min-width: 0; padding: 18px;
+  background: var(--azul-800); border: 2px solid var(--azul-500);
+  &.aberto { border-color: var(--ciano); }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  h3 { margin: 0; }
+  .nota { margin: 0; }
+}
+
+.selo { padding: 2px 10px; font-size: 0.8rem; background: var(--azul-500); }
+.aberto .selo { background: var(--ciano); color: var(--azul-900); }
+
+.vagas { margin: 0; }
+progress { width: 100%; accent-color: var(--ciano); }
+
+.campos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+label { display: grid; gap: 4px; min-width: 0; font-size: 0.85rem; color: var(--texto-claro); }
+input {
+  width: 100%; min-width: 0; box-sizing: border-box; padding: 8px; font: inherit;
+  color: var(--azul-900); background: var(--branco); border: 2px solid var(--azul-500);
+}
+
+.acao {
+  padding: 10px 16px; font-family: var(--fonte-titulo); font-size: 1rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--azul-900); background: var(--ciano); border: 2px solid var(--ciano); cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  &:hover:not(:disabled) { background: var(--branco); border-color: var(--branco); }
+  &:disabled { opacity: 0.6; cursor: wait; }
+  &--fechar { color: var(--laranja); background: transparent; border-color: var(--laranja);
+    &:hover:not(:disabled) { color: var(--azul-900); background: var(--laranja); border-color: var(--laranja); } }
+  &--novo { margin-top: 16px; color: var(--ciano); background: transparent; }
+}

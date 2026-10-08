@@ -1,0 +1,42 @@
+<p class="nota">
+  Cada inscrição entra no lote aberto de menor número do seu tipo. Quando as vagas acabam, o lote
+  fecha sozinho; o próximo é aberto por aqui.
+</p>
+
+@for (s of secoes(); track s.tipo) {
+  <h2>{{ s.titulo }}</h2>
+  <div class="lotes">
+    @for (l of s.lotes; track l.numero) {
+      @let ocup = ocupadas(l);
+      <article class="cartao" [class.aberto]="l.aberto">
+        <header>
+          <h3>{{ l.numero }}º lote</h3>
+          <span class="selo">{{ l.aberto ? 'Aberto' : ocup >= l.vagas ? 'Lotado' : 'Fechado' }}</span>
+        </header>
+        <p class="vagas"><strong>{{ ocup }}</strong> / {{ l.vagas }} vagas ocupadas</p>
+        <progress [value]="ocup" [max]="l.vagas || 1"></progress>
+        <div class="campos">
+          <label>Valor (R$)
+            <input type="number" min="0" step="0.01" [value]="l.valor" (change)="salvar(l, { valor: numero($event) })" />
+          </label>
+          <label>Vagas
+            <input type="number" min="0" step="1" [value]="l.vagas" (change)="salvar(l, { vagas: numero($event) })" />
+          </label>
+        </div>
+        <p class="nota">{{ l.valor | currency: 'BRL' }} por {{ s.tipo === 'lider' ? 'líder' : 'participante' }}</p>
+        <button
+          class="acao"
+          [class.acao--fechar]="l.aberto"
+          type="button"
+          [disabled]="salvandoLote(l)"
+          (click)="salvar(l, { aberto: !l.aberto })"
+        >
+          {{ l.aberto ? 'Fechar lote' : 'Abrir lote' }}
+        </button>
+      </article>
+    } @empty {
+      <p class="nota">Nenhum lote cadastrado.</p>
+    }
+  </div>
+  <button class="acao acao--novo" type="button" (click)="novoLote(s.tipo, s.lotes)">+ Novo lote</button>
+}

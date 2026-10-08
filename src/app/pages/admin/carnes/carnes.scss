@@ -1,0 +1,52 @@
+:host { display: block; }
+
+.nota { margin: 0; color: var(--texto-claro); }
+
+.totais {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 12px; margin-bottom: 16px;
+  div { padding: 12px; background: var(--azul-800); color: var(--texto-claro); }
+  strong { display: block; font-size: 1.4rem; color: var(--branco); }
+  .alerta strong { color: var(--laranja); }
+}
+
+.barra { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+
+label { display: grid; gap: 4px; min-width: 0; font-size: 0.85rem; color: var(--texto-claro); }
+input, select {
+  min-width: 0; box-sizing: border-box; padding: 8px 10px; font: inherit;
+  color: var(--azul-900); background: var(--branco); border: 2px solid var(--azul-500);
+}
+
+.gerar {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding: 12px; margin: 12px 0;
+  border: 2px dashed var(--ciano);
+  input[type='number'] { width: 90px; }
+}
+
+.carne {
+  display: grid; gap: 12px; padding: 16px; margin-bottom: 12px;
+  background: var(--azul-800); border-left: 4px solid var(--azul-500);
+  &--atrasado { border-left-color: var(--laranja); }
+  header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  h3 { margin: 0; font-size: 1.1rem; }
+  small { color: var(--texto-claro); }
+}
+.progresso { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.selo { padding: 2px 8px; font-size: 0.8rem; color: var(--azul-900);
+  &--ok { background: var(--ciano); }
+  &--atraso { background: var(--laranja); } }
+
+.parcelas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.parcelas li {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 8px 10px;
+  background: var(--azul-950); border-left: 3px solid var(--azul-500);
+  &[data-situacao='paga'] { border-left-color: var(--ciano); .estado { color: var(--ciano); } }
+  &[data-situacao='atrasada'] { border-left-color: var(--laranja); .estado { color: var(--laranja); } }
+  .num { font-weight: 700; min-width: 36px; }
+  .estado { margin-right: auto; font-weight: 600; }
+}
+.baixa { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.link { justify-self: start; padding: 0; background: none; border: 0; font: inherit; color: var(--ciano); text-decoration: underline; cursor: pointer;
+  &:disabled { opacity: 0.5; cursor: wait; } }

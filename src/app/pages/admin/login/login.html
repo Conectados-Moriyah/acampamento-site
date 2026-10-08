@@ -1,0 +1,17 @@
+<main class="admin admin--centro">
+  <form class="admin__cartao" [formGroup]="form" (ngSubmit)="entrar()" novalidate>
+    <h1>Área administrativa</h1>
+    <label>
+      Usuário (e-mail)
+      <input type="email" formControlName="email" autocomplete="username" />
+    </label>
+    <label>
+      Senha
+      <input type="password" formControlName="senha" autocomplete="current-password" />
+    </label>
+    @if (erro()) { <p class="admin__erro" role="alert">{{ erro() }}</p> }
+    <button class="btn btn--azul" type="submit" [disabled]="carregando()">
+      {{ carregando() ? 'Entrando…' : 'Entrar' }}
+    </button>
+  </form>
+</main>

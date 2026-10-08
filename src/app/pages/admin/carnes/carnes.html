@@ -1,0 +1,103 @@
+@let t = totais();
+<div class="totais">
+  <div><strong>{{ t.carnes }}</strong> carnês ativos</div>
+  <div><strong>{{ t.recebido | currency: 'BRL' }}</strong> recebido</div>
+  <div><strong>{{ t.aReceber | currency: 'BRL' }}</strong> a receber</div>
+  <div class="alerta"><strong>{{ t.atrasado | currency: 'BRL' }}</strong> atrasado ({{ t.qtdAtrasadas }} parcelas)</div>
+</div>
+
+<div class="barra">
+  <select aria-label="Filtrar carnês" [value]="filtro()" (change)="filtro.set($any(texto($event)))">
+    <option value="">Todos os carnês</option>
+    <option value="atrasados">Com parcela atrasada</option>
+    <option value="em-dia">Em dia</option>
+    <option value="quitados">Quitados</option>
+  </select>
+  <button class="btn btn--azul" type="button" (click)="abrirGerar('nova')">+ Colocar inscrição no carnê</button>
+</div>
+
+<ng-template #formGerar let-nome="nome">
+  <div class="gerar">
+    @if (gerando() === 'nova') {
+      <label>Inscrição
+        <select [value]="novoInscrito()" (change)="novoInscrito.set(texto($event))">
+          <option value="">Escolha…</option>
+          @for (i of semCarne(); track i.id) {
+            <option [value]="i.id">{{ i.nome }} — {{ i.valor | currency: 'BRL' }}</option>
+          }
+        </select>
+      </label>
+    }
+    <label>Parcelas
+      <input type="number" min="1" max="12" [value]="totalParcelas()" (change)="totalParcelas.set(+texto($event))" />
+    </label>
+    <label>1º vencimento
+      <input type="date" [value]="primeiroVencimento()" (change)="primeiroVencimento.set(texto($event))" />
+    </label>
+    <button class="btn btn--azul" type="button" [disabled]="ocupado() || (gerando() === 'nova' && !novoInscrito())" (click)="gerar()">Gerar parcelas</button>
+    <button class="link" type="button" (click)="gerando.set(null)">Cancelar</button>
+  </div>
+</ng-template>
+
+@if (gerando() === 'nova') {
+  <ng-container *ngTemplateOutlet="formGerar" />
+}
+
+@for (c of filtrados(); track c.inscricao.id) {
+  <article class="carne" [class.carne--atrasado]="c.atrasadas > 0">
+    <header>
+      <div>
+        <h3>{{ c.inscricao.nome }}</h3>
+        <small>{{ c.inscricao.telefone }} · {{ c.inscricao.tipo === 'lider' ? 'Líder' : 'Participante' }}</small>
+      </div>
+      <p class="progresso">
+        <strong>{{ c.pago | currency: 'BRL' }}</strong> de {{ (c.total || c.inscricao.valor) | currency: 'BRL' }}
+        @if (c.quitado) { <span class="selo selo--ok">Quitado</span> }
+        @else if (c.atrasadas) { <span class="selo selo--atraso">{{ c.atrasadas }} atrasada(s)</span> }
+      </p>
+    </header>
+
+    @if (c.parcelas.length === 0) {
+      <p class="nota">Inscrição recebida, parcelas ainda não geradas. Use "Gerar parcelas" abaixo.</p>
+    } @else {
+      <ul class="parcelas">
+        @for (p of c.parcelas; track p.id) {
+          @let s = situacao(p);
+          <li [attr.data-situacao]="s">
+            <span class="num">{{ p.numero }}/{{ p.total }}</span>
+            <span>{{ p.valor | currency: 'BRL' }}</span>
+            <span>vence {{ p.vencimento | date: 'dd/MM/yy' }}</span>
+            <span class="estado">{{ s === 'paga' ? 'Paga' : s === 'atrasada' ? 'Atrasada' : 'Em aberto' }}</span>
+            @if (s === 'paga') {
+              <button class="link" type="button" [disabled]="ocupado()" (click)="estornar(p, c.inscricao.nome)">Estornar</button>
+            } @else if (pagando() === p.id) {
+              <span class="baixa">
+                <select aria-label="Forma de pagamento" [value]="forma()" (change)="forma.set($any(texto($event)))">
+                  <option value="pix">Pix</option>
+                  <option value="dinheiro">Dinheiro</option>
+                  <option value="cartao">Cartão</option>
+                  <option value="outro">Outro</option>
+                </select>
+                <input type="date" aria-label="Data do pagamento" [value]="dataPagamento()" (change)="dataPagamento.set(texto($event))" />
+                <button class="btn btn--azul btn--sm" type="button" [disabled]="ocupado()" (click)="pagar(p)">Confirmar</button>
+                <button class="link" type="button" (click)="pagando.set(null)">Voltar</button>
+              </span>
+            } @else {
+              <button class="link" type="button" (click)="abrirPagar(p)">Dar baixa</button>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    @if (gerando() === c.inscricao.id) {
+      <ng-container *ngTemplateOutlet="formGerar" />
+    } @else if (!c.temPaga) {
+      <button class="link" type="button" (click)="abrirGerar(c.inscricao)">
+        {{ c.parcelas.length ? 'Refazer parcelas' : 'Gerar parcelas' }}
+      </button>
+    }
+  </article>
+} @empty {
+  <p class="nota">Nenhum carnê{{ filtro() ? ' nesse filtro' : '' }}.</p>
+}

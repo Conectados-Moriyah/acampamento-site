@@ -1,0 +1,120 @@
+<div class="admin__layout">
+<aside class="admin__menu" [class.aberto]="menuAberto()">
+  <div class="admin__marca">
+    <strong>Admin · Conectados</strong>
+    <button class="admin__hamburguer" type="button" [attr.aria-expanded]="menuAberto()" aria-label="Abrir menu" (click)="menuAberto.set(!menuAberto())">☰</button>
+  </div>
+  <nav>
+    @for (item of itensMenu; track item.id) {
+      <button type="button" [class.ativo]="aba() === item.id" [attr.aria-current]="aba() === item.id ? 'page' : null" (click)="irPara(item.id)">
+        {{ item.label }}
+      </button>
+    }
+  </nav>
+  <div class="admin__usuario">
+    <small>{{ supabase.usuario()?.email }}</small>
+    <button type="button" (click)="sair()">⎋ Sair</button>
+  </div>
+</aside>
+
+<main class="admin">
+  <h1 class="admin__titulo">{{ tituloAba() }}</h1>
+
+  @if (carregando()) {
+    <p>Carregando…</p>
+  } @else if (erro()) {
+    <p class="admin__erro" role="alert">{{ erro() }}</p>
+    <button class="btn btn--contorno" type="button" (click)="carregar()">Tentar de novo</button>
+  } @else {
+    @switch (aba()) {
+      @case ('lista') {
+        <div class="admin__cards">
+          <div><strong>{{ totais().ativas }}</strong> ativas</div>
+          <div><strong>{{ totais().confirmadas }}</strong> confirmadas</div>
+          <div><strong>{{ totais().pendentes }}</strong> pendentes</div>
+          <div><strong>{{ totais().lideres }}</strong> líderes</div>
+        </div>
+
+        <div class="admin__filtros">
+          <input type="search" placeholder="Buscar nome, e-mail ou telefone" [value]="busca()" (input)="busca.set(valor($event))" />
+          <select [value]="filtroStatus()" (change)="filtroStatus.set($any(valor($event)))">
+            <option value="">Todos os status</option>
+            <option value="pendente">Pendente</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+          <select [value]="filtroTipo()" (change)="filtroTipo.set($any(valor($event)))">
+            <option value="">Todos os tipos</option>
+            <option value="participante">Participante</option>
+            <option value="lider">Líder</option>
+          </select>
+          <button class="btn btn--contorno" type="button" (click)="exportar()">Exportar Excel</button>
+          <button class="btn btn--azul" type="button" [attr.aria-expanded]="linksLider()" (click)="linksLider.set(!linksLider())">
+            {{ linksLider() ? 'Fechar links de líder' : '+ Inscrição de líder' }}
+          </button>
+        </div>
+
+        @if (linksLider()) {
+          <app-convites modo="checkout" tipoFixo="lider" [convites]="convites()" [inscricoes]="inscricoes()" (alterado)="carregar()" />
+        }
+
+        @if (filtradas().length === 0) {
+          <p>Nenhuma inscrição encontrada.</p>
+        } @else {
+          <table class="admin__tabela">
+            <thead>
+              <tr><th>Data</th><th>Nome</th><th>Tipo</th><th>Lote</th><th>Valor</th><th>Pago</th><th>Telefone</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              @for (i of filtradas(); track i.id) {
+                <tr [class.admin__cancelada]="i.status === 'cancelada'">
+                  <td>{{ i.criada_em | date: 'dd/MM/yy HH:mm' }}</td>
+                  <td>{{ i.nome }}</td>
+                  <td>{{ i.tipo === 'lider' ? 'Líder' : 'Participante' }}</td>
+                  <td>{{ i.lote_numero ? i.lote_numero + 'º' : '—' }}</td>
+                  <td>{{ i.valor !== null ? (i.valor | currency: 'BRL') : '—' }}</td>
+                  @let pago = pagoPorInscricao().get(i.id) ?? 0;
+                  <td [class.admin__quitado]="i.valor !== null && pago >= i.valor">{{ pago | currency: 'BRL' }}</td>
+                  <td>{{ i.telefone }}</td>
+                  <td>
+                    <select class="admin__status" [attr.data-status]="i.status" [value]="i.status" (change)="mudarStatus(i, valor($event))">
+                      <option value="pendente">Pendente</option>
+                      <option value="confirmada">Confirmada</option>
+                      <option value="cancelada">Cancelada</option>
+                    </select>
+                  </td>
+                  <td><button class="admin__link" type="button" (click)="editando.set(i)">Abrir</button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      }
+      @case ('resumo') {
+        <app-resumo [inscricoes]="inscricoes()" />
+      }
+      @case ('lotes') {
+        <app-lotes [lotes]="lotes()" [inscricoes]="inscricoes()" (alterado)="carregar()" />
+      }
+      @case ('carnes') {
+        <app-convites modo="carne" [convites]="convites()" [inscricoes]="inscricoes()" (alterado)="carregar()" />
+        <app-carnes [inscricoes]="inscricoes()" [parcelas]="parcelas()" (alterado)="carregar()" />
+      }
+      @case ('caixa') {
+        <app-caixa [movimentos]="movimentos()" [inscricoes]="inscricoes()" [cupons]="cupons()" (alterado)="carregar()" />
+      }
+      @case ('cupons') {
+        <app-cupons [cupons]="cupons()" [movimentos]="movimentos()" [inscricoes]="inscricoes()" (alterado)="carregar()" />
+      }
+    }
+  }
+
+  @if (editando(); as atual) {
+    <app-editar-inscricao
+      [inscricao]="atual"
+      (fechar)="editando.set(null)"
+      (salvo)="editando.set(null); carregar()"
+    />
+  }
+</main>
+</div>

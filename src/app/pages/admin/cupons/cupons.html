@@ -1,0 +1,63 @@
+<section class="gerar">
+  <h3>Gerar cupom a partir das doações</h3>
+  <p class="nota">Saldo de doações livre: <strong>{{ disponivel() | currency: 'BRL' }}</strong></p>
+  <form class="linha" (submit)="$event.preventDefault(); gerar()">
+    <label>Valor (R$)
+      <input name="valor" inputmode="decimal" placeholder="0,00" [value]="valor()" (input)="valor.set(texto($event))" />
+    </label>
+    <label class="largo">Para quem / observação (opcional)
+      <input name="obs" placeholder="Ex.: ajuda para jovem da célula X" [value]="observacao()" (input)="observacao.set(texto($event))" />
+    </label>
+    <button class="btn btn--azul" type="submit" [disabled]="gerando() || disponivel() <= 0">
+      {{ gerando() ? 'Gerando…' : 'Gerar cupom' }}
+    </button>
+  </form>
+  @if (disponivel() <= 0) { <p class="nota">Lance doações no Caixa para poder gerar cupons.</p> }
+  @if (erro()) { <p class="erro" role="alert">{{ erro() }}</p> }
+  @if (gerado(); as g) {
+    <p class="novo" role="status">
+      Cupom criado: <code>{{ g.codigo }}</code> de {{ g.valor | currency: 'BRL' }}
+      <button class="link" type="button" (click)="copiar(g.codigo)">Copiar</button>
+    </p>
+  }
+</section>
+
+<h3>Cupons</h3>
+@if (cupons().length === 0) {
+  <p class="nota">Nenhum cupom gerado.</p>
+} @else {
+  <div class="rolagem">
+    <table>
+      <thead>
+        <tr><th>Código</th><th class="num">Valor</th><th>Status</th><th>Observação</th><th>Usado por</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (c of cupons(); track c.id) {
+          <tr [class.inativo]="c.status !== 'disponivel'">
+            <td><code>{{ c.codigo }}</code></td>
+            <td class="num">{{ c.valor | currency: 'BRL' }}</td>
+            <td><span class="selo" [attr.data-status]="c.status">{{ c.status === 'disponivel' ? 'Disponível' : c.status === 'usado' ? 'Usado' : 'Cancelado' }}</span></td>
+            <td>{{ c.observacao ?? '—' }}</td>
+            <td>{{ c.status === 'usado' ? nome(c.inscricao_id) + ' · ' + (c.usado_em | date: 'dd/MM/yy') : '—' }}</td>
+            <td class="acoes">
+              @if (c.status === 'disponivel') {
+                @if (aplicando() === c.id) {
+                  <select aria-label="Inscrito que vai usar o cupom" (change)="aplicar(c, texto($event))">
+                    <option value="">Escolha o inscrito…</option>
+                    @for (i of inscricoesAtivas(); track i.id) {
+                      <option [value]="i.id">{{ i.nome }}</option>
+                    }
+                  </select>
+                  <button class="link" type="button" (click)="aplicando.set(null)">Voltar</button>
+                } @else {
+                  <button class="link" type="button" (click)="aplicando.set(c.id)">Usar</button>
+                  <button class="link link--perigo" type="button" (click)="cancelar(c)">Cancelar</button>
+                }
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
