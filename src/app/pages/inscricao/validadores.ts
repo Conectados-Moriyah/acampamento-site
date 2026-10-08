@@ -59,6 +59,25 @@ export const nomeCompleto: ValidatorFn = (c: AbstractControl): ValidationErrors 
   return partes.length >= 2 && partes.every((p) => soLetras.test(p)) ? null : { nomeCompleto: true };
 };
 
+/** Nome sem acentos, caixa e espaços extras, para comparar "José  da Silva" com "jose da silva". */
+const normalizarNome = (v: string) =>
+  v.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim().replace(/\s+/g, ' ');
+
+/**
+ * Impede que um campo do responsável repita o mesmo campo do participante (ex.: o jovem colocando
+ * o próprio nome ou telefone como responsável). `caminho` é o campo do participante no formulário.
+ */
+export function diferenteDoParticipante(caminho: string, tipo: 'nome' | 'telefone'): ValidatorFn {
+  const normalizar = tipo === 'nome' ? normalizarNome : soDigitos;
+  return (c: AbstractControl): ValidationErrors | null => {
+    const participante = c.root.get(caminho)?.value;
+    if (!c.value || !participante) return null;
+    return normalizar(c.value) === normalizar(participante)
+      ? { [tipo === 'nome' ? 'mesmoNome' : 'mesmoTelefone']: true }
+      : null;
+  };
+}
+
 /** Máscaras aplicadas enquanto a pessoa digita. */
 export const mascaras = {
   data(v: string) {

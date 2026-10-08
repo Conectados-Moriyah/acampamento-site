@@ -492,3 +492,13 @@ button { font: inherit; cursor: pointer; }
   transition: transform 0.3s var(--suave);
   &:hover { transform: scale(1.08); }
 }
+
+/* ---------- Ficha: declaração e consentimento (fica aqui pelo limite de 4 kB do inscricao.scss) ---------- */
+.aceites { display: grid; gap: 8px; padding-top: 16px; border-top: 2px dashed var(--azul-500); }
+.aceites .aceite { // .aceites na frente: precisa vencer o "label" do inscricao.scss
+  display: flex; gap: 12px; padding: 12px; border: 2px solid var(--azul-900); font-weight: 400; font-size: 0.9rem; cursor: pointer;
+  input { flex: none; width: 20px; height: 20px; accent-color: var(--azul-900); }
+  strong { display: block; }
+  &:has(:checked) { background: #e8f7fb; }
+  &.erro { border-color: #d6336c; }
+}

@@ -38,7 +38,7 @@ fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 18px; animation
 .perguntas { display: grid; gap: 18px; }
 
 label { display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600; }
-input:not([type='radio']), textarea {
+input:not([type='radio'], [type='checkbox']), textarea, select {
   font: inherit; font-size: 1rem; font-weight: 400; padding: 11px 12px; width: 100%;
   border: 2px solid var(--azul-900); border-radius: 0; background: var(--branco); color: var(--texto);
   transition: box-shadow 0.2s, border-color 0.2s;
@@ -71,3 +71,4 @@ em { color: #c2255c; font-style: normal; font-size: 0.8rem; font-weight: 500; }
 .obs { font-size: 0.75rem; color: var(--azul-500); margin: 14px 0 0; text-align: right; }
 
 .fim { animation: aparecer 0.5s var(--suave); p { margin: 0 0 18px; } }
+

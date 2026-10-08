@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -9,13 +9,15 @@ import {
   Validators,
 } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ModoConvite, Supabase, TipoInscricao } from '../../core/supabase';
 import {
   calcularIdade,
   cpf,
   dataBr,
   lerDataBr,
   mascaras,
+  diferenteDoParticipante,
   nomeCompleto,
   telefone,
 } from './validadores';
@@ -38,6 +40,7 @@ type Mascara = keyof typeof mascaras;
 export class Inscricao {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly supabase = inject(Supabase);
 
   protected readonly etapas = [
     { id: 'pessoais', titulo: 'Dados pessoais' },
@@ -81,6 +84,7 @@ export class Inscricao {
   ];
 
   protected readonly perguntasIgreja: PerguntaSimNao[] = [
+    { campo: 'emanuel', texto: 'Você é da Igreja Cristã Emanuel Moriyah?' },
     {
       campo: 'frequenta',
       texto: 'Você frequenta alguma igreja atualmente?',
@@ -102,6 +106,7 @@ export class Inscricao {
   protected readonly form = this.fb.group({
     pessoais: this.fb.group({
       nome: ['', [Validators.required, nomeCompleto]],
+      genero: ['', Validators.required],
       nascimento: ['', [Validators.required, dataBr]],
       idade: [{ value: '', disabled: true }],
       cpf: ['', [Validators.required, cpf]],
@@ -110,8 +115,8 @@ export class Inscricao {
     }),
     saude: this.grupoSimNao(this.perguntasSaude, { outrasInfo: [''] }),
     responsavel: this.fb.group({
-      nome: ['', [Validators.required, nomeCompleto]],
-      telefone: ['', [Validators.required, telefone]],
+      nome: ['', [Validators.required, nomeCompleto, diferenteDoParticipante('pessoais.nome', 'nome')]],
+      telefone: ['', [Validators.required, telefone, diferenteDoParticipante('pessoais.telefone', 'telefone')]],
       emergencia1: ['', [Validators.required, telefone]],
       emergencia2: ['', [telefone]],
     }),
@@ -120,11 +125,32 @@ export class Inscricao {
     expectativas: this.fb.group({
       espera: ['', [Validators.required, Validators.minLength(3)]],
       compartilhar: [''],
+      declaracao: [false, Validators.requiredTrue],
+      consentimento: [false, Validators.requiredTrue],
     }),
   });
 
+  /**
+   * Link de inscrição gerado pelo admin (`/inscricao?convite=<token>`). Tipo (participante/líder)
+   * e modo vêm do banco, não do link: 'carne' grava sem pagamento no site; 'checkout' segue para o
+   * pagamento online, como a inscrição pública.
+   */
+  private readonly token = inject(ActivatedRoute).snapshot.queryParamMap.get('convite');
+  protected readonly convite = signal<
+    'nenhum' | 'verificando' | 'invalido' | { tipo: TipoInscricao; modo: ModoConvite }
+  >(this.token ? 'verificando' : 'nenhum');
+  private readonly dadosConvite = computed(() => {
+    const c = this.convite();
+    return typeof c === 'object' ? c : null;
+  });
+  protected readonly viaConvite = computed(() => this.dadosConvite() !== null);
+  protected readonly lider = computed(() => this.dadosConvite()?.tipo === 'lider');
+  protected readonly carne = computed(() => this.dadosConvite()?.modo === 'carne');
+
   protected readonly etapa = signal(0);
   protected readonly enviada = signal(false);
+  protected readonly enviando = signal(false);
+  protected readonly erroEnvio = signal<string | null>(null);
   protected readonly idade = signal<number | null>(null);
 
   constructor() {
@@ -135,6 +161,34 @@ export class Inscricao {
       this.idade.set(idade);
       this.form.controls.pessoais.controls.idade.setValue(idade === null ? '' : `${idade} anos`);
     });
+
+    // Responsável é comparado com o participante: se o participante mudar, revalida.
+    const { pessoais, responsavel } = this.form.controls;
+    pessoais.controls.nome.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => responsavel.controls.nome.updateValueAndValidity());
+    pessoais.controls.telefone.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => responsavel.controls.telefone.updateValueAndValidity());
+
+    // Quem é da Emanuel Moriyah não precisa dizer que igreja frequenta.
+    const igreja = this.form.controls.igreja.controls;
+    const frequenta = igreja['frequenta'];
+    frequenta.disable();
+    igreja['emanuel'].valueChanges.pipe(takeUntilDestroyed()).subscribe((v) => {
+      if (v === 'nao') {
+        frequenta.enable();
+      } else {
+        frequenta.reset(); // limpa também o "Qual igreja?" ligado a ela
+        frequenta.disable();
+      }
+    });
+
+    // O Supabase só existe no navegador; a página em si é pré-renderizada.
+    if (this.token) {
+      afterNextRender(() => {
+        this.supabase
+          .lerConvite(this.token!)
+          .then((c) => this.convite.set(c ?? 'invalido'))
+          .catch(() => this.convite.set('invalido'));
+      });
+    }
   }
 
   /** Cria o grupo de perguntas sim/não e liga a obrigatoriedade dos campos de detalhe. */
@@ -186,6 +240,8 @@ export class Inscricao {
     if (e['telefone']) return 'Telefone inválido. Use DDD + número, ex.: (11) 91234-5678.';
     if (e['email']) return 'E-mail inválido.';
     if (e['minlength']) return 'Escreva um pouco mais.';
+    if (e['mesmoNome']) return 'O responsável precisa ser outra pessoa, não o próprio acampante.';
+    if (e['mesmoTelefone']) return 'Informe um telefone do responsável diferente do telefone do acampante.';
     return '';
   }
 
@@ -210,7 +266,7 @@ export class Inscricao {
     this.rolarParaTopo();
   }
 
-  protected avancar(): void {
+  protected async avancar(): Promise<void> {
     const grupo = this.grupoAtual();
     if (grupo.invalid) {
       grupo.markAllAsTouched();
@@ -220,9 +276,25 @@ export class Inscricao {
     if (this.etapa() < this.etapas.length - 1) {
       this.irPara(this.etapa() + 1);
     } else {
-      // TODO: enviar this.form.getRawValue() para o destino das inscrições (planilha, API, etc.).
-      this.enviada.set(true);
-      this.rolarParaTopo();
+      this.enviando.set(true);
+      this.erroEnvio.set(null);
+      try {
+        await this.supabase.enviarInscricao(this.form.getRawValue(), this.viaConvite() ? this.token : null);
+        // TODO: quem não é carnê (site ou link de líder) vai para o checkout do InfinitePay aqui.
+        this.enviada.set(true);
+        this.rolarParaTopo();
+      } catch (e) {
+        const msg = String((e as { message?: string })?.message);
+        const encerradas = msg.includes('INSCRICOES_ENCERRADAS');
+        if (msg.includes('CONVITE_INVALIDO')) this.convite.set('invalido');
+        this.erroEnvio.set(
+          encerradas
+            ? 'As vagas do lote atual acabaram. Aguarde a abertura do próximo lote.'
+            : 'Não foi possível enviar a ficha. Verifique sua internet e tente novamente.',
+        );
+      } finally {
+        this.enviando.set(false);
+      }
     }
   }
 

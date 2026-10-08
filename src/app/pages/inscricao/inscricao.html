@@ -7,17 +7,33 @@
 
 <main class="container pagina">
   <div class="cabecalho">
-    <h1>Ficha de inscrição</h1>
+    <h1>Ficha de inscrição{{ lider() ? ' — Líder' : '' }}</h1>
     <span class="script">Acampamento Jovem · 6 a 9 de fevereiro</span>
   </div>
 
-  @if (enviada()) {
+  @if (convite() === 'verificando') {
+    <section class="cartao"><p>Verificando o link…</p></section>
+  } @else if (convite() === 'invalido') {
+    <section class="cartao fim">
+      <h2>Link inválido</h2>
+      <p>
+        Este link de inscrição já foi usado, foi cancelado ou não existe. Peça um novo link para a
+        liderança.
+      </p>
+      <a class="btn btn--escuro" routerLink="/">Voltar ao site</a>
+    </section>
+  } @else if (enviada()) {
     <section class="cartao fim">
       <h2>Ficha preenchida! 🙌</h2>
       <p>
         Obrigado, {{ form.controls.pessoais.controls.nome.value.split(' ')[0] }}! Todos os dados
-        foram conferidos. A liderança entrará em contato pelo WhatsApp informado com as orientações
-        de pagamento.
+        foram conferidos.
+        @if (carne()) {
+          O pagamento será feito via carnê; a liderança entrará em contato pelo WhatsApp informado
+          com as parcelas.
+        } @else {
+          A liderança entrará em contato pelo WhatsApp informado com as orientações de pagamento.
+        }
       </p>
       @if (idade() !== null && idade()! < 18) {
         <p class="aviso">
@@ -57,10 +73,18 @@
         @case (0) {
           <fieldset formGroupName="pessoais">
             <label>
-              Nome completo *
+              Nome completo (do acampante) *
               <input formControlName="nome" autocomplete="name" [class.erro]="invalido('pessoais', 'nome')" />
               @if (invalido('pessoais', 'nome')) { <em>{{ erro('pessoais', 'nome') }}</em> }
             </label>
+            <div class="pergunta">
+              <p>Gênero *</p>
+              <div class="opcoes">
+                <label class="opcao"><input type="radio" formControlName="genero" value="masculino" /> Masculino</label>
+                <label class="opcao"><input type="radio" formControlName="genero" value="feminino" /> Feminino</label>
+              </div>
+              @if (invalido('pessoais', 'genero')) { <em>Escolha uma opção.</em> }
+            </div>
             <div class="linha">
               <label>
                 Data de nascimento *
@@ -189,28 +213,58 @@
               Existe algo que você gostaria de compartilhar com a liderança antes do acampamento?
               <textarea formControlName="compartilhar" rows="4"></textarea>
             </label>
+
+            <div class="aceites">
+              <label class="aceite" [class.erro]="invalido('expectativas', 'declaracao')">
+                <input type="checkbox" formControlName="declaracao" />
+                <span>
+                  <strong>Declaração de veracidade *</strong>
+                  Declaro que todas as informações desta ficha foram preenchidas por mim, ou com o meu
+                  conhecimento, e são verdadeiras.
+                </span>
+              </label>
+              @if (invalido('expectativas', 'declaracao')) { <em>Marque a declaração para enviar a ficha.</em> }
+
+              <label class="aceite" [class.erro]="invalido('expectativas', 'consentimento')">
+                <input type="checkbox" formControlName="consentimento" />
+                <span>
+                  <strong>Termo de consentimento *</strong>
+                  Autorizo a Igreja Cristã Emanuel Moriyah a usar os dados desta ficha, inclusive as
+                  informações de saúde, somente para a organização, a segurança e o cuidado dos
+                  participantes no acampamento, conforme a Lei Geral de Proteção de Dados (Lei
+                  13.709/2018). Os dados não serão compartilhados com terceiros fora desse fim.
+                  @if (idade() !== null && idade()! < 18) {
+                    Por ser menor de 18 anos, confirmo que meu responsável está ciente e de acordo.
+                  }
+                </span>
+              </label>
+              @if (invalido('expectativas', 'consentimento')) { <em>Marque o termo de consentimento para enviar a ficha.</em> }
+            </div>
           </fieldset>
         }
+
       }
 
       <ng-template #simNao let-grupo="grupo" let-perguntas="perguntas">
         <div [formGroup]="$any(form.get(grupo))" class="perguntas">
           @for (p of perguntas; track p.campo) {
-            <div class="pergunta" role="radiogroup" [attr.aria-labelledby]="'p-' + p.campo">
-              <p [id]="'p-' + p.campo">{{ p.texto }} *</p>
-              <div class="opcoes">
-                <label class="opcao"><input type="radio" [formControlName]="p.campo" value="sim" /> Sim</label>
-                <label class="opcao"><input type="radio" [formControlName]="p.campo" value="nao" /> Não</label>
+            @if (campo(grupo, p.campo).enabled) {
+              <div class="pergunta" role="radiogroup" [attr.aria-labelledby]="'p-' + p.campo">
+                <p [id]="'p-' + p.campo">{{ p.texto }} *</p>
+                <div class="opcoes">
+                  <label class="opcao"><input type="radio" [formControlName]="p.campo" value="sim" /> Sim</label>
+                  <label class="opcao"><input type="radio" [formControlName]="p.campo" value="nao" /> Não</label>
+                </div>
+                @if (invalido(grupo, p.campo)) { <em>Escolha uma opção.</em> }
+                @if (p.detalhe && campo(grupo, p.campo).value === 'sim') {
+                  <label class="detalhe">
+                    {{ p.detalhe.rotulo }} *
+                    <input [formControlName]="p.detalhe.campo" [class.erro]="invalido(grupo, p.detalhe.campo)" />
+                    @if (invalido(grupo, p.detalhe.campo)) { <em>{{ erro(grupo, p.detalhe.campo) }}</em> }
+                  </label>
+                }
               </div>
-              @if (invalido(grupo, p.campo)) { <em>Escolha uma opção.</em> }
-              @if (p.detalhe && campo(grupo, p.campo).value === 'sim') {
-                <label class="detalhe">
-                  {{ p.detalhe.rotulo }} *
-                  <input [formControlName]="p.detalhe.campo" [class.erro]="invalido(grupo, p.detalhe.campo)" />
-                  @if (invalido(grupo, p.detalhe.campo)) { <em>{{ erro(grupo, p.detalhe.campo) }}</em> }
-                </label>
-              }
-            </div>
+            }
           }
         </div>
       </ng-template>
@@ -219,10 +273,13 @@
         @if (etapa() > 0) {
           <button class="btn btn--contorno-escuro" type="button" (click)="voltar()">← Voltar</button>
         }
-        <button class="btn btn--escuro" type="submit">
-          {{ etapa() === etapas.length - 1 ? 'Enviar ficha' : 'Continuar →' }}
+        <button class="btn btn--escuro" type="submit" [disabled]="enviando()">
+          {{ etapa() === etapas.length - 1 ? (enviando() ? 'Enviando…' : 'Enviar ficha') : 'Continuar →' }}
         </button>
       </div>
+      @if (erroEnvio()) {
+        <p class="obs" role="alert">{{ erroEnvio() }}</p>
+      }
       <p class="obs">* Campos obrigatórios</p>
     </form>
   }
