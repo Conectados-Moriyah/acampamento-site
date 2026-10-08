@@ -5,18 +5,21 @@ import { environment } from '../environments/environment';
 const API = 'https://api.checkout.infinitepay.io';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/**
- * Variáveis de ambiente do servidor (nunca no navegador):
- * - INFINITEPAY_HANDLE: InfiniteTag da conta, sem o `$`.
- * - SUPABASE_SERVICE_ROLE_KEY: chave service_role (Project Settings > API); ignora o RLS.
- * - SITE_URL: endereço público do site, ex.: https://conectados.exemplo.com.br (a InfinitePay
- *   precisa alcançar o webhook, então não funciona em localhost sem um túnel).
- */
+// Configuração do pagamento fica no arquivo .env da raiz (veja .env.example). Variáveis que já
+// existem no ambiente têm prioridade sobre o arquivo.
+try {
+  process.loadEnvFile();
+} catch {
+  // sem .env: vale o que estiver no ambiente
+}
+
 function config() {
   const handle = process.env['INFINITEPAY_HANDLE'];
   const chave = process.env['SUPABASE_SERVICE_ROLE_KEY'];
   const site = process.env['SITE_URL']?.replace(/\/$/, '');
-  if (!handle || !chave || !site) throw new Error('Pagamento online não configurado.');
+  if (!handle || !chave || !site) {
+    throw new Error('Pagamento online não configurado (INFINITEPAY_HANDLE, SUPABASE_SERVICE_ROLE_KEY e SITE_URL no .env).');
+  }
   return { handle, site, supabase: createClient(environment.supabaseUrl, chave) };
 }
 
