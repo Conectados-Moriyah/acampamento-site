@@ -130,13 +130,16 @@ export class Supabase {
   async enviarInscricao(
     dados: Record<string, Record<string, string | boolean>>,
     convite: string | null = null,
-  ): Promise<void> {
+  ): Promise<string> {
     const p = dados['pessoais'];
+    // O visitante não pode ler a linha de volta (RLS), então o id é gerado aqui.
+    const id = crypto.randomUUID();
     const { error } = await (await this.cliente())
       .from('inscricoes')
       // A ficha de líder não pede e-mail; a coluna é obrigatória.
-      .insert({ nome: p['nome'], telefone: p['telefone'], email: p['email'] ?? '', convite, dados });
+      .insert({ id, nome: p['nome'], telefone: p['telefone'], email: p['email'] ?? '', convite, dados });
     if (error) throw error;
+    return id;
   }
 
   async listarInscricoes(): Promise<Inscricao[]> {

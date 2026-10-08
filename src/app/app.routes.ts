@@ -10,6 +10,11 @@ export const routes: Routes = [
     title: 'Ficha de inscrição — Conectados',
   },
   {
+    path: 'inscricao/pago',
+    loadComponent: () => import('./pages/inscricao/pago/pago').then((m) => m.Pago),
+    title: 'Pagamento recebido — Conectados',
+  },
+  {
     path: 'admin/login',
     loadComponent: () => import('./pages/admin/login/login').then((m) => m.AdminLogin),
     title: 'Login — Admin Conectados',

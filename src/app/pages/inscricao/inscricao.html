@@ -47,6 +47,7 @@
     <!-- Link de líder (checkout ou carnê): ficha própria do apoio, mais curta. -->
     <app-ficha-lider
       [token]="token!"
+      [checkout]="!carne()"
       (enviada)="nomeLider.set($event); enviada.set(true)"
       (linkInvalido)="convite.set('invalido')"
     />

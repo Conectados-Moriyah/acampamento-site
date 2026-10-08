@@ -8,6 +8,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { Pagamento } from '../../../core/pagamento';
 import { Supabase } from '../../../core/supabase';
 import { cpf, mascaras, nomeCompleto, telefone } from '../validadores';
 
@@ -31,9 +32,12 @@ const umaArea = (g: AbstractControl): ValidationErrors | null =>
 export class FichaLider {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly supabase = inject(Supabase);
+  private readonly pagamento = inject(Pagamento);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly token = input.required<string>();
+  /** Link de modo checkout: depois da ficha, segue para o pagamento online. */
+  readonly checkout = input(false);
   /** Nome de quem enviou, para a tela de agradecimento. */
   readonly enviada = output<string>();
   /** O banco recusou o link (já usado ou cancelado). */
@@ -148,8 +152,8 @@ export class FichaLider {
     this.erroEnvio.set(null);
     try {
       const dados = this.form.getRawValue();
-      await this.supabase.enviarInscricao(dados, this.token());
-      // TODO: se o link não for de carnê, o líder vai para o checkout do InfinitePay aqui.
+      const id = await this.supabase.enviarInscricao(dados, this.token());
+      if (this.checkout() && (await this.pagamento.irParaCheckout(id))) return;
       this.enviada.emit(dados.pessoais.nome);
     } catch (e) {
       const msg = String((e as { message?: string })?.message);

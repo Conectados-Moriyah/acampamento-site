@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Pagamento } from '../../core/pagamento';
 import { ModoConvite, Supabase, TipoInscricao } from '../../core/supabase';
 import { FichaLider } from './lider/ficha-lider';
 import {
@@ -42,6 +43,7 @@ export class Inscricao {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly supabase = inject(Supabase);
+  private readonly pagamento = inject(Pagamento);
 
   protected readonly etapas = [
     { id: 'pessoais', titulo: 'Dados pessoais' },
@@ -282,8 +284,9 @@ export class Inscricao {
       this.enviando.set(true);
       this.erroEnvio.set(null);
       try {
-        await this.supabase.enviarInscricao(this.form.getRawValue(), this.viaConvite() ? this.token : null);
-        // TODO: quem não é carnê (site ou link de líder) vai para o checkout do InfinitePay aqui.
+        const id = await this.supabase.enviarInscricao(this.form.getRawValue(), this.viaConvite() ? this.token : null);
+        // Quem não é carnê paga no checkout da InfinitePay; se não abrir, a ficha já está gravada.
+        if (!this.carne() && (await this.pagamento.irParaCheckout(id))) return;
         this.enviada.set(true);
         this.rolarParaTopo();
       } catch (e) {
