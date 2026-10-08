@@ -38,16 +38,23 @@ export class Resumo {
 
   protected readonly grupos = computed(() => {
     const a = this.ativas();
+    // Perguntas de igreja só existem na ficha do participante; área de apoio só na do líder.
+    const participantes = a.filter((i) => i.tipo === 'participante');
+    const lideres = a.filter((i) => i.tipo === 'lider');
     return [
       { titulo: 'Gênero', itens: contar(a, (i) => (i.genero === 'masculino' ? 'Masculino' : i.genero === 'feminino' ? 'Feminino' : 'Não informado')) },
       { titulo: 'Faixa etária', itens: contar(a, faixaEtaria) },
       { titulo: 'Tipo', itens: contar(a, (i) => (i.tipo === 'lider' ? 'Líder' : 'Participante')) },
       { titulo: 'Status', itens: contar(a, (i) => i.status) },
       { titulo: 'Lote', itens: contar(a, (i) => (i.lote_numero ? `${i.lote_numero}º lote` : 'Sem lote')) },
-      { titulo: 'Batizados', itens: contar(a, (i) => simNao(i.dados['igreja']?.['batizado'])) },
+      { titulo: 'Batizados', itens: contar(participantes, (i) => simNao(i.dados['igreja']?.['batizado'])) },
       { titulo: 'Autoriza imagem', itens: contar(a, (i) => simNao(i.dados['imagem']?.['autoriza'])) },
-      { titulo: 'Da Emanuel Moriyah', itens: contar(a, (i) => simNao(i.dados['igreja']?.['emanuel'])) },
-      { titulo: 'Frequenta igreja', itens: contar(a, (i) => simNao(respostaIgreja(i.dados['igreja'], 'frequenta'))) },
+      { titulo: 'Da Emanuel Moriyah', itens: contar(participantes, (i) => simNao(i.dados['igreja']?.['emanuel'])) },
+      { titulo: 'Frequenta igreja', itens: contar(participantes, (i) => simNao(respostaIgreja(i.dados['igreja'], 'frequenta'))) },
+      {
+        titulo: 'Área de apoio (líderes)',
+        itens: contar(lideres, (i) => i.dados['apoio']?.['area']?.trim() || i.dados['apoio']?.['areaOutra']?.trim() || 'Não informada'),
+      },
     ];
   });
 
@@ -57,7 +64,7 @@ export class Resumo {
     const listas = SAUDE.map((q) => ({
       titulo: q.titulo,
       pessoas: a
-        .filter((i) => i.dados['saude']?.[q.campo] === 'sim')
+        .filter((i) => ['sim', 'outra'].includes(i.dados['saude']?.[q.campo]))
         .map((i) => this.pessoa(i, q.detalhe ? i.dados['saude']?.[q.detalhe] : '')),
     }));
     listas.push({

@@ -11,6 +11,7 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ModoConvite, Supabase, TipoInscricao } from '../../core/supabase';
+import { FichaLider } from './lider/ficha-lider';
 import {
   calcularIdade,
   cpf,
@@ -32,7 +33,7 @@ interface PerguntaSimNao {
 type Mascara = keyof typeof mascaras;
 
 @Component({
-  imports: [NgTemplateOutlet, ReactiveFormsModule, RouterLink],
+  imports: [FichaLider, NgTemplateOutlet, ReactiveFormsModule, RouterLink],
   selector: 'app-inscricao',
   styleUrl: './inscricao.scss',
   templateUrl: './inscricao.html',
@@ -135,7 +136,9 @@ export class Inscricao {
    * e modo vêm do banco, não do link: 'carne' grava sem pagamento no site; 'checkout' segue para o
    * pagamento online, como a inscrição pública.
    */
-  private readonly token = inject(ActivatedRoute).snapshot.queryParamMap.get('convite');
+  protected readonly token = inject(ActivatedRoute).snapshot.queryParamMap.get('convite');
+  /** Preenchido quando quem enviou foi a ficha de líder. */
+  protected readonly nomeLider = signal('');
   protected readonly convite = signal<
     'nenhum' | 'verificando' | 'invalido' | { tipo: TipoInscricao; modo: ModoConvite }
   >(this.token ? 'verificando' : 'nenhum');

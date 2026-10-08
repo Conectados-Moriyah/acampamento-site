@@ -134,7 +134,8 @@ export class Supabase {
     const p = dados['pessoais'];
     const { error } = await (await this.cliente())
       .from('inscricoes')
-      .insert({ nome: p['nome'], telefone: p['telefone'], email: p['email'], convite, dados });
+      // A ficha de líder não pede e-mail; a coluna é obrigatória.
+      .insert({ nome: p['nome'], telefone: p['telefone'], email: p['email'] ?? '', convite, dados });
     if (error) throw error;
   }
 

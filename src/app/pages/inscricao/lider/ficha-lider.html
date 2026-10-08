@@ -1,0 +1,162 @@
+<nav class="progresso" aria-label="Etapas da ficha">
+  <ol>
+    @for (e of etapas; track e.id; let i = $index) {
+      <li>
+        <button
+          type="button"
+          [class.ativo]="etapa() === i"
+          [class.feito]="etapa() > i"
+          [attr.aria-current]="etapa() === i ? 'step' : null"
+          (click)="irPara(i)"
+        >
+          <b>{{ i + 1 }}</b><span>{{ e.titulo }}</span>
+        </button>
+      </li>
+    }
+  </ol>
+  <div class="progresso__barra"><i [style.width.%]="((etapa() + 1) / etapas.length) * 100"></i></div>
+</nav>
+
+<form class="cartao" [formGroup]="form" novalidate (ngSubmit)="avancar()">
+  <h2>
+    {{ etapas[etapa()].titulo }}
+    <small>Etapa {{ etapa() + 1 }} de {{ etapas.length }}</small>
+  </h2>
+
+  @switch (etapa()) {
+    @case (0) {
+      <fieldset formGroupName="pessoais">
+        <label>
+          Nome completo *
+          <input formControlName="nome" autocomplete="name" [class.erro]="invalido('pessoais', 'nome')" />
+          @if (invalido('pessoais', 'nome')) { <em>{{ erro('pessoais', 'nome') }}</em> }
+        </label>
+        <div class="linha">
+          <label>
+            Idade *
+            <input formControlName="idade" type="number" inputmode="numeric" min="14" max="99" [class.erro]="invalido('pessoais', 'idade')" />
+            @if (invalido('pessoais', 'idade')) { <em>{{ erro('pessoais', 'idade') }}</em> }
+          </label>
+          <label>
+            CPF *
+            <input formControlName="cpf" inputmode="numeric" placeholder="000.000.000-00" [class.erro]="invalido('pessoais', 'cpf')" (input)="mascarar($event, 'pessoais', 'cpf', 'cpf')" />
+            @if (invalido('pessoais', 'cpf')) { <em>{{ erro('pessoais', 'cpf') }}</em> }
+          </label>
+        </div>
+        <label>
+          Telefone do apoio (WhatsApp) *
+          <input formControlName="telefone" type="tel" placeholder="(00) 00000-0000" autocomplete="tel" [class.erro]="invalido('pessoais', 'telefone')" (input)="mascarar($event, 'pessoais', 'telefone', 'telefone')" />
+          @if (invalido('pessoais', 'telefone')) { <em>{{ erro('pessoais', 'telefone') }}</em> }
+        </label>
+      </fieldset>
+    }
+
+    @case (1) {
+      <fieldset formGroupName="saude" class="perguntas">
+        <div class="pergunta" role="radiogroup" aria-labelledby="l-alergia">
+          <p id="l-alergia">Você possui alguma alergia? *</p>
+          <div class="opcoes">
+            <label class="opcao"><input type="radio" formControlName="alergia" value="nao" /> Não</label>
+            <label class="opcao"><input type="radio" formControlName="alergia" value="sim" /> Sim</label>
+            <label class="opcao"><input type="radio" formControlName="alergia" value="outra" /> Outra</label>
+          </div>
+          @if (invalido('saude', 'alergia')) { <em>Escolha uma opção.</em> }
+          @if (campo('saude', 'alergiaQual').enabled) {
+            <label class="detalhe">
+              Informe qual alergia *
+              <input formControlName="alergiaQual" [class.erro]="invalido('saude', 'alergiaQual')" />
+              @if (invalido('saude', 'alergiaQual')) { <em>{{ erro('saude', 'alergiaQual') }}</em> }
+            </label>
+          }
+        </div>
+        <div class="pergunta" role="radiogroup" aria-labelledby="l-restricao">
+          <p id="l-restricao">Você possui alguma restrição alimentar? *</p>
+          <div class="opcoes">
+            <label class="opcao"><input type="radio" formControlName="restricao" value="nao" /> Não</label>
+            <label class="opcao"><input type="radio" formControlName="restricao" value="sim" /> Sim</label>
+          </div>
+          @if (invalido('saude', 'restricao')) { <em>Escolha uma opção.</em> }
+          @if (campo('saude', 'restricaoQual').enabled) {
+            <label class="detalhe">
+              Informe qual restrição alimentar *
+              <input formControlName="restricaoQual" [class.erro]="invalido('saude', 'restricaoQual')" />
+              @if (invalido('saude', 'restricaoQual')) { <em>{{ erro('saude', 'restricaoQual') }}</em> }
+            </label>
+          }
+        </div>
+      </fieldset>
+    }
+
+    @case (2) {
+      <fieldset formGroupName="imagem">
+        <div class="pergunta" role="radiogroup" aria-labelledby="l-imagem">
+          <p id="l-imagem">Você autoriza o uso da sua imagem para fins de divulgação do Retiro Jovem? *</p>
+          <div class="opcoes">
+            <label class="opcao"><input type="radio" formControlName="autoriza" value="sim" /> Sim, autorizo</label>
+            <label class="opcao"><input type="radio" formControlName="autoriza" value="nao" /> Não autorizo</label>
+          </div>
+          @if (invalido('imagem', 'autoriza')) { <em>Escolha uma opção.</em> }
+        </div>
+      </fieldset>
+    }
+
+    @case (3) {
+      <fieldset formGroupName="apoio">
+        <label>
+          Qual será sua área de apoio durante o retiro?
+          <input formControlName="area" placeholder="Ex.: cozinha, louvor, recreação" [class.erro]="semArea()" />
+        </label>
+        <label>
+          Caso ainda não tenha uma área definida, informe abaixo
+          <input formControlName="areaOutra" placeholder="Ex.: onde gostaria de ajudar" [class.erro]="semArea()" />
+        </label>
+        @if (semArea()) { <em>Preencha um dos dois campos.</em> }
+      </fieldset>
+    }
+
+    @case (4) {
+      <fieldset formGroupName="observacoes">
+        <label>
+          Existe alguma informação importante que a equipe do retiro precisa saber sobre você?
+          <textarea formControlName="info" rows="4"></textarea>
+        </label>
+
+        <div class="aceites">
+          <label class="aceite" [class.erro]="invalido('observacoes', 'declaracao')">
+            <input type="checkbox" formControlName="declaracao" />
+            <span>
+              <strong>Declaração de veracidade *</strong>
+              Declaro que todas as informações desta ficha foram preenchidas por mim e são verdadeiras.
+            </span>
+          </label>
+          @if (invalido('observacoes', 'declaracao')) { <em>Marque a declaração para enviar a ficha.</em> }
+
+          <label class="aceite" [class.erro]="invalido('observacoes', 'consentimento')">
+            <input type="checkbox" formControlName="consentimento" />
+            <span>
+              <strong>Termo de consentimento *</strong>
+              Autorizo a Igreja Cristã Emanuel Moriyah a usar os dados desta ficha, inclusive as
+              informações de saúde, somente para a organização do retiro e o cuidado da equipe,
+              conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018). Os dados não serão
+              compartilhados com terceiros fora desse fim.
+            </span>
+          </label>
+          @if (invalido('observacoes', 'consentimento')) { <em>Marque o termo de consentimento para enviar a ficha.</em> }
+        </div>
+      </fieldset>
+    }
+  }
+
+  <div class="acoes">
+    @if (etapa() > 0) {
+      <button class="btn btn--contorno-escuro" type="button" (click)="voltar()">← Voltar</button>
+    }
+    <button class="btn btn--escuro" type="submit" [disabled]="enviando()">
+      {{ etapa() === etapas.length - 1 ? (enviando() ? 'Enviando…' : 'Enviar ficha') : 'Continuar →' }}
+    </button>
+  </div>
+  @if (erroEnvio()) {
+    <p class="obs" role="alert">{{ erroEnvio() }}</p>
+  }
+  <p class="obs">* Campos obrigatórios</p>
+</form>

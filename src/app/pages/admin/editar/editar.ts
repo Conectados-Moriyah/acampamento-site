@@ -24,7 +24,8 @@ export class EditarInscricao implements OnInit {
   readonly fechar = output();
   readonly salvo = output();
 
-  protected readonly etapas = ETAPAS;
+  /** Só as etapas que existem na ficha dessa pessoa (a de líder é diferente da de participante). */
+  protected etapas: typeof ETAPAS = [];
   protected readonly simNao = SIM_NAO;
   protected readonly textoValor = textoValor;
   protected readonly salvando = signal(false);
@@ -42,7 +43,8 @@ export class EditarInscricao implements OnInit {
 
   ngOnInit(): void {
     const i = this.inscricao();
-    for (const etapa of ETAPAS) {
+    this.etapas = ETAPAS.filter((e) => e.id in i.dados);
+    for (const etapa of this.etapas) {
       const grupo = new FormGroup<Record<string, FormControl<string>>>({});
       for (const campo of Object.keys(etapa.campos)) {
         grupo.addControl(campo, this.fb.control(i.dados[etapa.id]?.[campo] ?? ''));
@@ -82,7 +84,7 @@ export class EditarInscricao implements OnInit {
       ...(atualTipo !== c.tipo ? { lote_numero: null } : {}),
       nome: p['nome'].trim(),
       telefone: p['telefone'].trim(),
-      email: p['email'].trim(),
+      email: (p['email'] ?? '').trim(), // a ficha de líder não tem e-mail
       genero: p['genero'] || null,
       forma_pagamento: c.forma_pagamento,
       dados,

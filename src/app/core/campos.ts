@@ -66,6 +66,17 @@ export const ETAPAS: { id: string; titulo: string; campos: Record<string, string
       consentimento: 'Aceitou termo de consentimento',
     },
   },
+  // Só na ficha de líder (apoio).
+  { id: 'apoio', titulo: 'Área de apoio', campos: { area: 'Área de apoio', areaOutra: 'Área (se não definida)' } },
+  {
+    id: 'observacoes',
+    titulo: 'Observações',
+    campos: {
+      info: 'Informações importantes',
+      declaracao: 'Declarou veracidade',
+      consentimento: 'Aceitou termo de consentimento',
+    },
+  },
 ];
 
 /** Perguntas de saúde com resposta sim/não e o campo que detalha o "sim". */
@@ -84,6 +95,7 @@ export function textoValor(v: string | boolean | undefined): string {
   if (v === false) return 'Não';
   if (v === 'sim') return 'Sim';
   if (v === 'nao') return 'Não';
+  if (v === 'outra') return 'Outra';
   if (v === 'masculino') return 'Masculino';
   if (v === 'feminino') return 'Feminino';
   if (v === 'avista') return 'À vista';

@@ -55,6 +55,7 @@
                   <option value="">—</option>
                   <option value="sim">Sim</option>
                   <option value="nao">Não</option>
+                  @if (c[0] === 'alergia') { <option value="outra">Outra</option> }
                 </select>
               } @else if (c[0] === 'genero') {
                 <select [formControlName]="c[0]">

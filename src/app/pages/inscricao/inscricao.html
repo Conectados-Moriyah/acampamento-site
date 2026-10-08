@@ -26,7 +26,7 @@
     <section class="cartao fim">
       <h2>Ficha preenchida! 🙌</h2>
       <p>
-        Obrigado, {{ form.controls.pessoais.controls.nome.value.split(' ')[0] }}! Todos os dados
+        Obrigado, {{ (nomeLider() || form.controls.pessoais.controls.nome.value).split(' ')[0] }}! Todos os dados
         foram conferidos.
         @if (carne()) {
           O pagamento será feito via carnê; a liderança entrará em contato pelo WhatsApp informado
@@ -43,6 +43,13 @@
       }
       <a class="btn btn--escuro" routerLink="/">Voltar ao site</a>
     </section>
+  } @else if (lider()) {
+    <!-- Link de líder (checkout ou carnê): ficha própria do apoio, mais curta. -->
+    <app-ficha-lider
+      [token]="token!"
+      (enviada)="nomeLider.set($event); enviada.set(true)"
+      (linkInvalido)="convite.set('invalido')"
+    />
   } @else {
     <nav class="progresso" aria-label="Etapas da ficha">
       <ol>
