@@ -18,7 +18,9 @@ function config() {
   const chave = process.env['SUPABASE_SERVICE_ROLE_KEY'];
   const site = process.env['SITE_URL']?.replace(/\/$/, '');
   if (!handle || !chave || !site) {
-    throw new Error('Pagamento online não configurado (INFINITEPAY_HANDLE, SUPABASE_SERVICE_ROLE_KEY e SITE_URL no .env).');
+    throw new Error(
+      'Pagamento online não configurado (INFINITEPAY_HANDLE, SUPABASE_SERVICE_ROLE_KEY e SITE_URL no .env).',
+    );
   }
   return { handle, site, supabase: createClient(environment.supabaseUrl, chave) };
 }
@@ -86,58 +88,85 @@ infinitepay.post('/checkout', async (req, res) => {
   }
 });
 
+interface Retorno {
+  status: number;
+  corpo: Record<string, unknown>;
+}
+
 /**
- * Webhook da InfinitePay. O payload não é assinado, então nunca é confiado: o pagamento é
- * conferido na própria InfinitePay (`payment_check`) e o valor contra o da inscrição.
- * 200 = processado (ou já processado); 400 = a InfinitePay tenta de novo.
+ * Confirma um pagamento. O payload (do webhook ou do redirecionamento do navegador) nunca é
+ * confiado: o pagamento é conferido na própria InfinitePay (`payment_check`) e o valor contra o da
+ * inscrição. Vale para participante e líder (mesma tabela e mesma função do banco).
  */
+async function confirmarPagamento(dados: Record<string, unknown>): Promise<Retorno> {
+  const { order_nsu, transaction_nsu, capture_method } = dados;
+  const slug = dados['invoice_slug'] ?? dados['slug'];
+  if (!UUID.test(String(order_nsu)) || !transaction_nsu || !slug) {
+    return { status: 400, corpo: { erro: 'Payload inválido.' } };
+  }
+
+  const { handle, supabase } = config();
+  const conferencia = await post('/payment_check', { handle, order_nsu, transaction_nsu, slug });
+  const pago = (await conferencia.json().catch(() => null)) as {
+    success?: boolean;
+    paid?: boolean;
+    amount?: number;
+    capture_method?: string;
+  } | null;
+  if (!conferencia.ok || !pago?.success || !pago.paid) {
+    console.error('Pagamento InfinitePay não confirmado', order_nsu, conferencia.status, pago);
+    return { status: 400, corpo: { erro: 'Pagamento não confirmado.' } };
+  }
+
+  const { data: insc, error } = await supabase
+    .from('inscricoes')
+    .select('valor')
+    .eq('id', order_nsu)
+    .maybeSingle();
+  if (error) throw error;
+  if (!insc?.valor || (pago.amount ?? 0) < centavos(insc.valor)) {
+    // Não adianta tentar de novo: avisa no log e encerra para a InfinitePay parar de reenviar.
+    console.error(
+      'Pagamento InfinitePay com valor divergente',
+      order_nsu,
+      pago.amount,
+      insc?.valor,
+    );
+    return { status: 200, corpo: { ignorado: true } };
+  }
+
+  const { error: erroRpc } = await supabase.rpc('registrar_pagamento_online', {
+    p_inscricao: order_nsu,
+    p_valor: insc.valor,
+    p_forma: (pago.capture_method ?? capture_method) === 'pix' ? 'pix' : 'cartao',
+    p_nsu: String(transaction_nsu),
+  });
+  if (erroRpc) throw erroRpc;
+  return { status: 200, corpo: { ok: true } };
+}
+
+/** Webhook da InfinitePay. 200 = processado (ou já processado); 400 = a InfinitePay tenta de novo. */
 infinitepay.post('/infinitepay/webhook', async (req, res) => {
   try {
-    const { order_nsu, transaction_nsu, invoice_slug, capture_method } = req.body ?? {};
-    if (!UUID.test(String(order_nsu)) || !transaction_nsu || !invoice_slug) {
-      return void res.status(400).json({ erro: 'Payload inválido.' });
-    }
-
-    const { handle, supabase } = config();
-    const conferencia = await post('/payment_check', {
-      handle,
-      order_nsu,
-      transaction_nsu,
-      slug: invoice_slug,
-    });
-    const pago = (await conferencia.json().catch(() => null)) as {
-      success?: boolean;
-      paid?: boolean;
-      amount?: number;
-      capture_method?: string;
-    } | null;
-    if (!conferencia.ok || !pago?.success || !pago.paid) {
-      console.error('Webhook InfinitePay não confirmado', order_nsu, conferencia.status, pago);
-      return void res.status(400).json({ erro: 'Pagamento não confirmado.' });
-    }
-
-    const { data: insc, error } = await supabase
-      .from('inscricoes')
-      .select('valor')
-      .eq('id', order_nsu)
-      .maybeSingle();
-    if (error) throw error;
-    if (!insc?.valor || (pago.amount ?? 0) < centavos(insc.valor)) {
-      // Não adianta tentar de novo: avisa no log e encerra para a InfinitePay parar de reenviar.
-      console.error('Webhook InfinitePay com valor divergente', order_nsu, pago.amount, insc?.valor);
-      return void res.status(200).json({ ignorado: true });
-    }
-
-    const { error: erroRpc } = await supabase.rpc('registrar_pagamento_online', {
-      p_inscricao: order_nsu,
-      p_valor: insc.valor,
-      p_forma: (pago.capture_method ?? capture_method) === 'pix' ? 'pix' : 'cartao',
-      p_nsu: String(transaction_nsu),
-    });
-    if (erroRpc) throw erroRpc;
-    res.status(200).json({ ok: true });
+    const { status, corpo } = await confirmarPagamento(req.body ?? {});
+    res.status(status).json(corpo);
   } catch (e) {
     console.error('Erro no webhook InfinitePay', e);
     res.status(400).json({ erro: 'Falha ao processar.' });
+  }
+});
+
+/**
+ * Confirmação pelo retorno do navegador (`/inscricao/pago?order_nsu=...`). Cobre o caso em que o
+ * webhook não chega (ex.: site em localhost). É seguro: a confirmação é feita na InfinitePay e a
+ * gravação é idempotente (o mesmo `transaction_nsu` nunca lança duas vezes).
+ */
+infinitepay.post('/pagamento/confirmar', async (req, res) => {
+  try {
+    const { status, corpo } = await confirmarPagamento(req.body ?? {});
+    res.status(status).json(corpo);
+  } catch (e) {
+    console.error('Erro em /api/pagamento/confirmar', e);
+    res.status(500).json({ erro: 'Falha ao confirmar.' });
   }
 });
