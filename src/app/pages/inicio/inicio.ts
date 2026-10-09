@@ -63,6 +63,13 @@ export class Inicio {
   /** Lote aberto no admin; sem nenhum aberto, as inscrições ainda não começaram. */
   protected readonly indiceAberto = computed(() => this.lotes().findIndex((l) => l.aberto));
 
+  /** Fotos da Villa do Galo, em public/local/. */
+  protected readonly fotosLocal = [
+    { arquivo: 'foto-1.webp', alt: 'Vista aérea da Villa do Galo: campo de futebol, piscina, chalés e o lago ao fundo' },
+    { arquivo: 'foto-2.webp', alt: 'Jardim da Villa do Galo com lago e quiosque' },
+    { arquivo: 'foto-3.webp', alt: 'Área coberta com mesa de pebolim e mesas de madeira' },
+  ];
+
   protected readonly naoLevar = [
     'Roupas inapropriadas.',
     'Aparelhos eletrônicos desnecessários.',

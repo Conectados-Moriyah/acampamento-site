@@ -147,10 +147,10 @@
     <div class="container">
       <div class="cabecalho revelar"><h2>Onde?</h2><span class="script">Conheça o lugar</span></div>
       <div class="fotos">
-        @for (n of [1, 2, 3]; track n) {
-          <figure class="foto revelar" [style.transition-delay]="n * 90 + 'ms'">
-            <span>[Foto do local {{ n }}]</span>
-            <img [src]="'local/foto-' + n + '.jpg'" alt="Villa do Galo, local do acampamento" loading="lazy" (error)="$any($event.target).remove()" />
+        @for (foto of fotosLocal; track foto.arquivo; let n = $index) {
+          <figure class="foto revelar" [style.transition-delay]="(n + 1) * 90 + 'ms'">
+            <span>[Foto do local {{ n + 1 }}]</span>
+            <img [src]="'local/' + foto.arquivo" [alt]="foto.alt" loading="lazy" (error)="$any($event.target).remove()" />
           </figure>
         }
       </div>
