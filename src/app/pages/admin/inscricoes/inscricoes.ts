@@ -95,8 +95,14 @@ export class AdminInscricoes {
     this.carregar();
   }
 
+  /**
+   * "Carregando…" só na primeira vez. Nas recargas (depois de salvar algo) os dados são trocados
+   * sem desmontar a aba; senão ela perderia o que mostra na hora, como o link do cupom recém-gerado.
+   */
+  private jaCarregou = false;
+
   protected async carregar(): Promise<void> {
-    this.carregando.set(true);
+    if (!this.jaCarregou) this.carregando.set(true);
     try {
       const [inscricoes, lotes, movimentos, cupons, parcelas, convites] = await Promise.all([
         this.supabase.listarInscricoes(),
@@ -113,6 +119,7 @@ export class AdminInscricoes {
       this.parcelas.set(parcelas);
       this.convites.set(convites);
       this.erro.set(null);
+      this.jaCarregou = true;
     } catch {
       this.erro.set('Não foi possível carregar os dados.');
     } finally {
