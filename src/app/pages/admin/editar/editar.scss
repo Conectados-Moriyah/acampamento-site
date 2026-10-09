@@ -6,24 +6,24 @@
   border-left: 2px solid var(--ciano);
 
   header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-  h2 { flex: 1; margin: 0; font-size: 1.4rem; }
+  h2 { flex: 1; margin: 0; font-size: 1.4rem; small { font-size: 0.8rem; font-weight: 400; color: var(--texto-claro); } }
 }
 
 .fechar { background: none; border: 0; color: var(--branco); font-size: 2rem; line-height: 1; cursor: pointer; }
 
-fieldset { margin: 0 0 16px; padding: 12px; border: 1px solid var(--azul-800); }
+fieldset { min-width: 0; margin: 0 0 16px; padding: 12px; border: 1px solid var(--azul-800); }
 legend { padding: 0 6px; color: var(--laranja); font-weight: 700; }
 
-.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; align-items: stretch; }
 .largo { grid-column: 1 / -1; }
 
-label { display: grid; gap: 4px; font-size: 0.85rem; color: var(--texto-claro); }
+label { display: grid; align-content: end; gap: 4px; min-width: 0; font-size: 0.85rem; color: var(--texto-claro); }
 input, select, textarea {
-  padding: 8px 10px; font: inherit; font-size: 0.95rem; color: var(--azul-900);
+  box-sizing: border-box; width: 100%; min-width: 0; height: 40px; padding: 8px 10px; font: inherit; font-size: 0.95rem; color: var(--azul-900);
   background: var(--branco); border: 2px solid var(--azul-500);
   &:disabled { opacity: 0.7; }
 }
-textarea { resize: vertical; }
+textarea { height: auto; resize: vertical; }
 
 .erro { color: var(--laranja); }
 .acoes { display: flex; justify-content: flex-end; gap: 12px; }

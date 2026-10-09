@@ -43,7 +43,7 @@ export class Inscricao {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly supabase = inject(Supabase);
-  private readonly pagamento = inject(Pagamento);
+  protected readonly pagamento = inject(Pagamento);
 
   protected readonly etapas = [
     { id: 'pessoais', titulo: 'Dados pessoais' },

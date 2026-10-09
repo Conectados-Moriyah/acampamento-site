@@ -1,5 +1,6 @@
 import { CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Supabase } from '../../core/supabase';
 import {
   Component,
   DestroyRef,
@@ -12,7 +13,9 @@ import {
 
 interface Lote {
   numero: number;
-  normal: { valor: number; vagas: number };
+  valor: number;
+  vagas: number;
+  aberto: boolean;
 }
 
 /** Início do acampamento: saída da igreja, 6 de fevereiro às 10h (horário de Brasília). */
@@ -26,6 +29,7 @@ const INICIO_EVENTO = new Date('2027-02-06T10:00:00-03:00').getTime();
 })
 export class Inicio {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly supabase = inject(Supabase);
 
   protected readonly menu = [
     { id: 'onde', label: 'Onde?' },
@@ -49,11 +53,15 @@ export class Inicio {
     { num: '04', titulo: 'Comunhão', texto: 'Novas amizades e laços que continuam depois do acampamento.' },
   ];
 
-  protected readonly lotes: Lote[] = [
-    { numero: 1, normal: { valor: 350, vagas: 37 } },
-    { numero: 2, normal: { valor: 400, vagas: 37 } },
-    { numero: 3, normal: { valor: 450, vagas: 37 } },
-  ];
+  /** Valores de reserva, usados até os lotes do admin carregarem (ou se o banco não responder). */
+  protected readonly lotes = signal<Lote[]>([
+    { numero: 1, valor: 350, vagas: 37, aberto: false },
+    { numero: 2, valor: 400, vagas: 37, aberto: false },
+    { numero: 3, valor: 450, vagas: 37, aberto: false },
+  ]);
+
+  /** Lote aberto no admin; sem nenhum aberto, as inscrições ainda não começaram. */
+  protected readonly indiceAberto = computed(() => this.lotes().findIndex((l) => l.aberto));
 
   protected readonly naoLevar = [
     'Roupas inapropriadas.',
@@ -139,7 +147,13 @@ export class Inicio {
   protected readonly rolou = signal(false);
 
   protected readonly slideAtual = signal(0);
-  protected readonly totalSlides = 4;
+  protected readonly midias = [
+    { tipo: 'video', src: 'img/video-conectados.mp4', alt: '' },
+    { tipo: 'foto', src: 'img/galeria-1.jpg', alt: 'Jovens e líderes do Conectados de braços erguidos' },
+    { tipo: 'foto', src: 'img/galeria-2.jpg', alt: 'Foto em grupo dos participantes do Conectados' },
+  ];
+  protected readonly tocando = signal(false);
+  protected readonly totalSlides = this.midias.length;
   protected readonly slides = Array.from({ length: this.totalSlides }, (_, i) => i);
 
   protected readonly faqAberto = signal<number | null>(0);
@@ -161,6 +175,14 @@ export class Inicio {
 
     // Tudo que depende de window/IntersectionObserver roda só no navegador (o site é pré-renderizado).
     afterNextRender(() => {
+      this.supabase
+        .listarLotes()
+        .then((todos) => {
+          const lotes = todos.filter((l) => l.tipo === 'participante');
+          if (lotes.length) this.lotes.set(lotes);
+        })
+        .catch(() => undefined);
+
       const timer = setInterval(() => this.agora.set(Date.now()), 1000);
 
       const raiz = this.host.nativeElement;
@@ -204,7 +226,21 @@ export class Inicio {
     this.menuAberto.set(false);
   }
 
+  protected alternarVideo(video: HTMLVideoElement): void {
+    if (video.paused) {
+      void video.play();
+    } else {
+      video.pause();
+    }
+  }
+
+  protected irParaSlide(i: number): void {
+    document.querySelectorAll('.carrossel video').forEach((v) => (v as HTMLVideoElement).pause());
+    this.slideAtual.set(i);
+  }
+
   protected mudarSlide(passo: number): void {
+    document.querySelectorAll('.carrossel video').forEach((v) => (v as HTMLVideoElement).pause());
     this.slideAtual.update((i) => (i + passo + this.totalSlides) % this.totalSlides);
   }
 

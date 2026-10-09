@@ -34,7 +34,7 @@
 
 <div class="faixa faixa--azul" aria-hidden="true">
   <div class="faixa__trilho">
-    @for (r of [0, 1]; track r) {
+    @for (r of [0, 1, 2, 3, 4, 5]; track r) {
       @for (t of faixa; track t) {
         <span>{{ t }}</span><b>✦</b>
       }
@@ -73,18 +73,37 @@
   </section>
 
   <!-- VÍDEOS -->
-  <section class="videos container revelar" aria-roledescription="carrossel" aria-label="Vídeos">
+  <section class="videos container revelar" aria-roledescription="carrossel" aria-label="Vídeo e fotos">
     <div class="carrossel">
+      <div class="carrossel__janela">
       <div class="carrossel__trilho" [style.transform]="'translateX(-' + slideAtual() * 100 + '%)'">
-        @for (s of slides; track s) {
+        @for (m of midias; track m.src; let s = $index) {
           <div class="carrossel__slide" [attr.aria-hidden]="s !== slideAtual()">
-            <button class="play" type="button" [attr.aria-label]="'Reproduzir vídeo ' + (s + 1)" [attr.tabindex]="s === slideAtual() ? 0 : -1">▶</button>
-            <p>Vídeo de chamada {{ s + 1 }}</p>
+            @if (m.tipo === 'video') {
+              <video
+                #video
+                [src]="m.src"
+                playsinline
+                loop
+                muted
+                preload="metadata"
+                tabindex="-1"
+                (click)="alternarVideo(video)"
+                (play)="tocando.set(true)"
+                (pause)="tocando.set(false)"
+              ></video>
+              <div class="carrossel__controles">
+                <button type="button" [attr.aria-label]="tocando() ? 'Pausar vídeo' : 'Reproduzir vídeo'" [attr.tabindex]="s === slideAtual() ? 0 : -1" (click)="alternarVideo(video)">{{ tocando() ? '❚❚' : '▶' }}</button>
+              </div>
+            } @else {
+              <img [src]="m.src" [alt]="m.alt" loading="lazy" />
+            }
           </div>
         }
       </div>
-      <button class="carrossel__seta carrossel__seta--esq" type="button" aria-label="Vídeo anterior" (click)="mudarSlide(-1)">‹</button>
-      <button class="carrossel__seta carrossel__seta--dir" type="button" aria-label="Próximo vídeo" (click)="mudarSlide(1)">›</button>
+      </div>
+      <button class="carrossel__seta carrossel__seta--esq" type="button" aria-label="Anterior" (click)="mudarSlide(-1)">‹</button>
+      <button class="carrossel__seta carrossel__seta--dir" type="button" aria-label="Próximo" (click)="mudarSlide(1)">›</button>
       <span class="carrossel__contador">{{ slideAtual() + 1 }} / {{ totalSlides }}</span>
     </div>
     <div class="pontos">
@@ -92,8 +111,8 @@
         <button
           type="button"
           [class.ativo]="s === slideAtual()"
-          [attr.aria-label]="'Ir para o vídeo ' + (s + 1)"
-          (click)="slideAtual.set(s)"
+          [attr.aria-label]="'Ir para o item ' + (s + 1)"
+          (click)="irParaSlide(s)"
         ></button>
       }
     </div>
@@ -179,7 +198,7 @@
 
   <div class="faixa faixa--laranja" aria-hidden="true">
     <div class="faixa__trilho faixa__trilho--reverso">
-      @for (r of [0, 1]; track r) {
+      @for (r of [0, 1, 2, 3, 4, 5]; track r) {
         @for (t of faixa; track t) {
           <span>{{ t }}</span><b>✦</b>
         }
@@ -224,19 +243,21 @@
         <div><h2>Como?</h2><span class="script">Garanta sua vaga</span></div>
       </div>
 
-      <div class="lotes">
-        @for (lote of lotes; track lote.numero; let i = $index) {
-          @let preco = lote.normal;
-          <article class="lote revelar" [class.lote--atual]="i === 0" [style.transition-delay]="i * 90 + 'ms'">
+      <div class="lotes revelar">
+        @for (lote of lotes(); track lote.numero; let i = $index) {
+          @let aberto = indiceAberto();
+          <article class="lote" [class.lote--atual]="aberto < 0 ? i === 0 : i === aberto">
             <span class="lote__selo">{{ lote.numero }}º lote</span>
-            @if (i === 0) {
-              <em class="lote__status">Em breve</em>
+            @if (aberto < 0 ? i === 0 : i === aberto) {
+              <em class="lote__status">{{ aberto < 0 ? 'Em breve' : 'Inscrições abertas' }}</em>
+            } @else if (aberto >= 0 && i < aberto) {
+              <em class="lote__status lote__status--off">Esgotado</em>
             } @else {
               <em class="lote__status lote__status--off">Não iniciado</em>
             }
             <small>Inscrição participante</small>
-            <strong class="lote__valor">{{ preco.valor | currency: 'BRL' : 'symbol' : '1.0-0' }}</strong>
-            <span class="lote__vagas">{{ preco.vagas }} vagas</span>
+            <strong class="lote__valor">{{ lote.valor | currency: 'BRL' : 'symbol' : '1.0-0' }}</strong>
+            <span class="lote__vagas">{{ lote.vagas }} vagas</span>
           </article>
         }
       </div>
@@ -317,7 +338,7 @@
 
 <div class="faixa faixa--laranja" aria-hidden="true">
   <div class="faixa__trilho">
-    @for (r of [0, 1, 2]; track r) {
+    @for (r of [0, 1, 2, 3, 4, 5]; track r) {
       <span>Alegria que não passa</span><b>✦</b><span>6 a 9 de fevereiro</span><b>✦</b>
     }
   </div>

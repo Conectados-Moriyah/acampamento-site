@@ -1,11 +1,11 @@
 <div class="fundo" (click)="fechar.emit()"></div>
 <aside class="painel" role="dialog" aria-modal="true" aria-labelledby="titulo-editar">
   <header>
-    <h2 id="titulo-editar">{{ inscricao().nome }}</h2>
+    <h2 id="titulo-editar">{{ inscricao().nome }}@if (somenteLeitura()) { <small>· visualização</small> }</h2>
     <button class="fechar" type="button" aria-label="Fechar" (click)="fechar.emit()">×</button>
   </header>
 
-  <form (ngSubmit)="salvar()">
+  <form (submit)="$event.preventDefault(); salvar()">
     <fieldset [formGroup]="controle">
       <legend>Controle</legend>
       <div class="grade">
@@ -74,10 +74,14 @@
 
     @if (erro()) { <p class="erro" role="alert">{{ erro() }}</p> }
     <div class="acoes">
-      <button class="btn btn--contorno" type="button" (click)="fechar.emit()">Cancelar</button>
-      <button class="btn btn--azul" type="submit" [disabled]="salvando()">
-        {{ salvando() ? 'Salvando…' : 'Salvar' }}
-      </button>
+      @if (somenteLeitura()) {
+        <button class="btn btn--azul" type="button" (click)="fechar.emit()">Fechar</button>
+      } @else {
+        <button class="btn btn--contorno" type="button" (click)="fechar.emit()">Cancelar</button>
+        <button class="btn btn--azul" type="submit" [disabled]="salvando()">
+          {{ salvando() ? 'Salvando…' : 'Salvar' }}
+        </button>
+      }
     </div>
   </form>
 </aside>

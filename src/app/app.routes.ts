@@ -15,6 +15,11 @@ export const routes: Routes = [
     title: 'Pagamento recebido — Conectados',
   },
   {
+    path: 'inscricao/pagar/:id',
+    loadComponent: () => import('./pages/inscricao/pagar/pagar').then((m) => m.Pagar),
+    title: 'Pagamento da inscrição — Conectados',
+  },
+  {
     path: 'admin/login',
     loadComponent: () => import('./pages/admin/login/login').then((m) => m.AdminLogin),
     title: 'Login — Admin Conectados',

@@ -48,6 +48,12 @@ export class AdminInscricoes {
 
   /** Inscrição aberta no painel de edição. */
   protected readonly editando = signal<Inscricao | null>(null);
+  protected readonly modoEdicao = signal<'ver' | 'editar'>('editar');
+
+  protected abrir(i: Inscricao, modo: 'ver' | 'editar'): void {
+    this.modoEdicao.set(modo);
+    this.editando.set(i);
+  }
 
   protected readonly busca = signal('');
   protected readonly filtroStatus = signal<StatusInscricao | ''>('');
@@ -127,6 +133,26 @@ export class AdminInscricoes {
 
   protected substituir(atualizada: Inscricao): void {
     this.inscricoes.update((lista) => lista.map((i) => (i.id === atualizada.id ? atualizada : i)));
+  }
+
+  private linkPagamento(i: Inscricao): string {
+    return `${location.origin}/inscricao/pagar/${i.id}`;
+  }
+
+  /** Abre o WhatsApp da pessoa com o link para pagar a inscrição (o checkout é gerado ao abrir). */
+  protected linkWhatsapp(i: Inscricao): string {
+    const digitos = i.telefone.replace(/\D/g, '');
+    const texto = `Olá, ${i.nome.split(' ')[0]}! Sua inscrição no Conectados está aguardando o pagamento. Pague por aqui: ${this.linkPagamento(i)}`;
+    return `https://wa.me/55${digitos}?text=${encodeURIComponent(texto)}`;
+  }
+
+  protected async copiarLink(i: Inscricao): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.linkPagamento(i));
+      alert('Link de pagamento copiado.');
+    } catch {
+      prompt('Copie o link de pagamento:', this.linkPagamento(i));
+    }
   }
 
   protected irPara(aba: Aba): void {

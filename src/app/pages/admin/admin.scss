@@ -12,8 +12,9 @@
   &__erro { margin: 0; color: var(--laranja); }
 
   &__titulo { margin-bottom: 20px !important; font-size: clamp(1.5rem, 4vw, 2rem); }
+  &__rolagem { overflow-x: auto; }
   &__tabela {
-    width: 100%; border-collapse: collapse; display: block; overflow-x: auto;
+    width: 100%; border-collapse: collapse;
     th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--azul-800); white-space: nowrap; }
     th { color: var(--ciano); }
   }
@@ -34,6 +35,13 @@
   }
   &__cancelada td { opacity: 0.55; }
   &__quitado { color: var(--ciano); font-weight: 700; }
+  &__acoes { white-space: nowrap; }
+  &__icone {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-width: 64px; height: 56px; padding: 0 6px; margin-right: 6px; font-size: 0.72rem; text-decoration: none;
+    background: none; border: 1px solid var(--azul-500); color: var(--ciano); cursor: pointer;
+    &:hover { background: var(--azul-800); }
+  }
   &__link { background: none; border: 0; color: var(--ciano); cursor: pointer; font: inherit; text-decoration: underline; }
 
   /* ---------- Layout com menu lateral ---------- */

@@ -21,6 +21,8 @@ export class EditarInscricao implements OnInit {
   private readonly fb = inject(NonNullableFormBuilder);
 
   readonly inscricao = input.required<Inscricao>();
+  /** Modo "visualizar": mostra todos os dados, sem permitir alteração. */
+  readonly somenteLeitura = input(false);
   readonly fechar = output();
   readonly salvo = output();
 
@@ -58,9 +60,14 @@ export class EditarInscricao implements OnInit {
       valor: i.valor === null ? '' : String(i.valor),
       observacao: i.observacao ?? '',
     });
+    if (this.somenteLeitura()) {
+      this.controle.disable();
+      this.dados.disable();
+    }
   }
 
   protected async salvar(): Promise<void> {
+    if (this.somenteLeitura()) return;
     const dados = this.dados.getRawValue() as Dados;
     const p = dados['pessoais'];
     if (!p['nome'].trim() || !p['telefone'].trim()) {

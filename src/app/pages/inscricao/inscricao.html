@@ -35,6 +35,12 @@
           A liderança entrará em contato pelo WhatsApp informado com as orientações de pagamento.
         }
       </p>
+      @if (pagamento.falhou()) {
+        <p class="aviso aviso--erro" role="alert">
+          Não foi possível abrir o pagamento online agora. Sua ficha foi gravada normalmente; a
+          liderança entrará em contato pelo WhatsApp para combinar o pagamento.
+        </p>
+      }
       @if (idade() !== null && idade()! < 18) {
         <p class="aviso">
           Como você é menor de 18 anos, lembre-se de entregar o termo de autorização assinado pelo

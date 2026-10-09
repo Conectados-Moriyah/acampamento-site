@@ -49,7 +49,7 @@ input:not([type='radio'], [type='checkbox']), textarea, select {
 textarea { resize: vertical; }
 em { color: #c2255c; font-style: normal; font-size: 0.8rem; font-weight: 500; }
 
-.linha { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; @media (max-width: 560px) { grid-template-columns: 1fr; } }
+.linha { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; @media (max-width: 560px) { grid-template-columns: 1fr; } }
 
 .pergunta {
   border-left: 4px solid var(--ciano); padding: 4px 0 4px 14px;
@@ -65,7 +65,8 @@ em { color: #c2255c; font-style: normal; font-size: 0.8rem; font-weight: 500; }
 }
 .detalhe { margin-top: 12px; animation: aparecer 0.35s var(--suave); }
 
-.aviso { background: #fff1e0; border-left: 4px solid var(--laranja); padding: 10px 12px; font-size: 0.85rem; margin: 0; color: var(--texto); }
+.aviso { background: #fff1e0; border-left: 4px solid var(--laranja); padding: 10px 12px; font-size: 0.85rem; margin: 0; color: var(--texto);
+  &--erro { background: #ffe5e5; border-left-color: #d12f2f; } }
 
 .acoes { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .obs { font-size: 0.75rem; color: var(--azul-500); margin: 14px 0 0; text-align: right; }

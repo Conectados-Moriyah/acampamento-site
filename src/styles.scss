@@ -168,7 +168,8 @@ button { font: inherit; cursor: pointer; }
   &--azul { background: var(--ciano); }
   &--laranja { background: var(--laranja); transform: rotate(-1.2deg); margin: 12px -8px; }
   &__trilho {
-    display: inline-flex; gap: 16px; animation: rolar 30s linear infinite;
+    display: inline-flex; animation: rolar 30s linear infinite;
+    > * { margin-right: 16px; }
     &--reverso { animation-direction: reverse; }
   }
 }
@@ -215,21 +216,28 @@ button { font: inherit; cursor: pointer; }
 /* ---------- Carrossel ---------- */
 .videos { padding: 24px 0 72px; }
 .carrossel {
-  position: relative; overflow: hidden; border: 3px solid var(--ciano); box-shadow: 8px 8px 0 var(--ciano-escuro);
-  &__trilho { display: flex; transition: transform 0.7s var(--suave); }
+  position: relative; isolation: isolate; border: 3px solid var(--ciano); box-shadow: 8px 8px 0 var(--ciano-escuro);
+  &__janela { overflow: hidden; transform: translateZ(0); }
+  &__trilho { display: flex; position: relative; z-index: 1; transition: transform 0.7s var(--suave); }
   &__slide {
-    flex: 0 0 100%; aspect-ratio: 16 / 7; display: grid; place-content: center; justify-items: center; gap: 14px;
+    flex: 0 0 100%; aspect-ratio: 16 / 9; display: grid; place-content: center; justify-items: center; gap: 14px;
     background: var(--cinza) linear-gradient(135deg, transparent 49.6%, rgba(12, 22, 64, 0.08) 50%, transparent 50.4%);
     color: var(--azul-900); font-family: var(--fonte-titulo); text-transform: uppercase; letter-spacing: 0.08em;
-    p { margin: 0; }
+    position: relative;
+    video, img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: var(--azul-900); }
+  }
+  &__controles {
+    position: absolute; z-index: 5; right: 12px; bottom: 12px; display: flex; gap: 8px;
+    button { width: 40px; height: 40px; border: 2px solid var(--azul-900); background: var(--branco); color: var(--azul-900); font-size: 1rem; line-height: 1; transition: background 0.2s;
+      &:hover { background: var(--ciano); } }
   }
   &__seta {
-    position: absolute; top: 50%; translate: 0 -50%; width: 40px; height: 40px; border: 2px solid var(--azul-900);
+    position: absolute; z-index: 5; transform: translateZ(0); top: calc(50% - 20px); width: 40px; height: 40px; border: 2px solid var(--azul-900);
     background: var(--branco); color: var(--azul-900); font-size: 1.6rem; line-height: 1; transition: background 0.2s;
     &:hover { background: var(--ciano); }
     &--esq { left: 12px; } &--dir { right: 12px; }
   }
-  &__contador { position: absolute; left: 12px; bottom: 10px; background: var(--azul-900); padding: 2px 8px; font-size: 0.75rem; }
+  &__contador { position: absolute; z-index: 5; transform: translateZ(0); left: 12px; top: 10px; background: var(--azul-900); padding: 2px 8px; font-size: 0.75rem; }
 }
 .play {
   width: 64px; height: 64px; border-radius: 50%; border: 0; background: var(--laranja); color: var(--branco); font-size: 1.4rem;
