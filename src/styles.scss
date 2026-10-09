@@ -310,13 +310,12 @@ button { font: inherit; cursor: pointer; }
   span { color: var(--texto-claro); font-size: 0.9rem; margin-left: 8px; }
 }
 
+/* Altura acompanha a largura da tela (sem aspect-ratio: com min-height ele alargava a caixa além
+   da tela no celular). */
 .mapa {
-  aspect-ratio: 16 / 6; min-height: 220px; display: grid; place-content: center; justify-items: center;
-  border: 3px solid var(--azul-900);
-  background: var(--branco) linear-gradient(rgba(12, 22, 64, 0.08) 1px, transparent 1px) 0 0 / 28px 28px;
-  font-family: var(--fonte-titulo); text-transform: uppercase;
-  display: block; padding: 0; overflow: hidden;
-  iframe { display: block; width: 100%; height: 100%; min-height: 320px; border: 0; }
+  height: clamp(280px, 38vw, 440px); overflow: hidden;
+  border: 3px solid var(--azul-900); background: var(--branco);
+  iframe { display: block; width: 100%; height: 100%; border: 0; }
 }
 
 .quando { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
@@ -509,6 +508,10 @@ button { font: inherit; cursor: pointer; }
   strong { display: block; }
   &:has(:checked) { background: #e8f7fb; }
   &.erro { border-color: #d6336c; }
+}
+
+/* Aviso de cupom no topo da ficha (link gerado a partir de um cupom de doação). */
+.aviso.cupom { margin-bottom: 16px; font-size: 0.95rem; }
 
 /* ---------- Admin no celular: tabelas viram cartões ----------
    Cada <td> leva data-rotulo com o nome da coluna; o .tabela-cartoes__titulo vira o título do cartão.
@@ -529,7 +532,3 @@ button { font: inherit; cursor: pointer; }
     .tabela-cartoes__titulo { order: -1; padding-bottom: 6px !important; font-weight: 700; font-size: 1.05rem; text-align: left !important; &::before { content: none; } }
   }
 }
-}
-
-/* Aviso de cupom no topo da ficha (link gerado a partir de um cupom de doação). */
-.aviso.cupom { margin-bottom: 16px; font-size: 0.95rem; }
