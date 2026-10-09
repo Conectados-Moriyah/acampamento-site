@@ -8,7 +8,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { NgTemplateOutlet } from '@angular/common';
+import { CurrencyPipe, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Pagamento } from '../../core/pagamento';
 import { ModoConvite, Supabase, TipoInscricao } from '../../core/supabase';
@@ -34,7 +34,7 @@ interface PerguntaSimNao {
 type Mascara = keyof typeof mascaras;
 
 @Component({
-  imports: [FichaLider, NgTemplateOutlet, ReactiveFormsModule, RouterLink],
+  imports: [CurrencyPipe, FichaLider, NgTemplateOutlet, ReactiveFormsModule, RouterLink],
   selector: 'app-inscricao',
   styleUrl: './inscricao.scss',
   templateUrl: './inscricao.html',
@@ -142,7 +142,7 @@ export class Inscricao {
   /** Preenchido quando quem enviou foi a ficha de líder. */
   protected readonly nomeLider = signal('');
   protected readonly convite = signal<
-    'nenhum' | 'verificando' | 'invalido' | { tipo: TipoInscricao; modo: ModoConvite }
+    'nenhum' | 'verificando' | 'invalido' | { tipo: TipoInscricao; modo: ModoConvite; desconto?: number | null }
   >(this.token ? 'verificando' : 'nenhum');
   private readonly dadosConvite = computed(() => {
     const c = this.convite();
@@ -151,6 +151,8 @@ export class Inscricao {
   protected readonly viaConvite = computed(() => this.dadosConvite() !== null);
   protected readonly lider = computed(() => this.dadosConvite()?.tipo === 'lider');
   protected readonly carne = computed(() => this.dadosConvite()?.modo === 'carne');
+  /** Valor do cupom de doação ligado ao link, se houver. */
+  protected readonly desconto = computed(() => this.dadosConvite()?.desconto ?? null);
 
   protected readonly etapa = signal(0);
   protected readonly enviada = signal(false);

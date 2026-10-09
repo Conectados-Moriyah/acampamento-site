@@ -1,7 +1,17 @@
 <section class="gerar">
   <h3>Gerar cupom a partir das doações</h3>
-  <p class="nota">Saldo de doações livre: <strong>{{ disponivel() | currency: 'BRL' }}</strong></p>
+  <p class="nota">
+    Saldo de doações livre: <strong>{{ disponivel() | currency: 'BRL' }}</strong>. O cupom gera um link
+    de inscrição: quem se inscreve por ele já recebe o desconto e paga só a diferença no checkout. Se o
+    cupom cobrir o valor do lote, a inscrição é confirmada sem pagamento.
+  </p>
   <form class="linha" (submit)="$event.preventDefault(); gerar()">
+    <label>Para
+      <select name="tipo" [value]="tipo()" (change)="tipo.set($any(texto($event)))">
+        <option value="participante">Participante</option>
+        <option value="lider">Líder</option>
+      </select>
+    </label>
     <label>Valor (R$)
       <input name="valor" inputmode="decimal" placeholder="0,00" [value]="valor()" (input)="valor.set(texto($event))" />
     </label>
@@ -15,10 +25,17 @@
   @if (disponivel() <= 0) { <p class="nota">Lance doações no Caixa para poder gerar cupons.</p> }
   @if (erro()) { <p class="erro" role="alert">{{ erro() }}</p> }
   @if (gerado(); as g) {
-    <p class="novo" role="status">
-      Cupom criado: <code>{{ g.codigo }}</code> de {{ g.valor | currency: 'BRL' }}
-      <button class="link" type="button" (click)="copiar(g.codigo)">Copiar</button>
-    </p>
+    <div class="novo" role="status">
+      <p>
+        Cupom <code>{{ g.codigo }}</code> de {{ g.valor | currency: 'BRL' }} para
+        {{ g.tipo === 'lider' ? 'líder' : 'participante' }}. Envie o link:
+      </p>
+      <code class="url">{{ link(g) }}</code>
+      <div class="acoes">
+        <button class="btn btn--azul btn--sm" type="button" (click)="copiar(g)">{{ copiado() === g.id ? 'Copiado!' : 'Copiar link' }}</button>
+        <a class="btn btn--contorno btn--sm" [href]="whatsapp(g)" target="_blank" rel="noopener">Enviar no WhatsApp</a>
+      </div>
+    </div>
   }
 </section>
 
@@ -29,12 +46,13 @@
   <div class="rolagem">
     <table>
       <thead>
-        <tr><th>Código</th><th class="num">Valor</th><th>Status</th><th>Observação</th><th>Usado por</th><th></th></tr>
+        <tr><th>Código</th><th>Para</th><th class="num">Valor</th><th>Status</th><th>Observação</th><th>Usado por</th><th></th></tr>
       </thead>
       <tbody>
         @for (c of cupons(); track c.id) {
           <tr [class.inativo]="c.status !== 'disponivel'">
             <td><code>{{ c.codigo }}</code></td>
+            <td>{{ c.tipo === 'lider' ? 'Líder' : 'Participante' }}</td>
             <td class="num">{{ c.valor | currency: 'BRL' }}</td>
             <td><span class="selo" [attr.data-status]="c.status">{{ c.status === 'disponivel' ? 'Disponível' : c.status === 'usado' ? 'Usado' : 'Cancelado' }}</span></td>
             <td>{{ c.observacao ?? '—' }}</td>
@@ -50,7 +68,11 @@
                   </select>
                   <button class="link" type="button" (click)="aplicando.set(null)">Voltar</button>
                 } @else {
-                  <button class="link" type="button" (click)="aplicando.set(c.id)">Usar</button>
+                  @if (c.convite) {
+                    <button class="link" type="button" (click)="copiar(c)">{{ copiado() === c.id ? 'Copiado!' : 'Copiar link' }}</button>
+                    <a class="link" [href]="whatsapp(c)" target="_blank" rel="noopener">WhatsApp</a>
+                  }
+                  <button class="link" type="button" title="Aplicar numa inscrição já feita" (click)="aplicando.set(c.id)">Usar</button>
                   <button class="link link--perigo" type="button" (click)="cancelar(c)">Cancelar</button>
                 }
               }

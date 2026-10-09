@@ -83,6 +83,10 @@ export interface Cupom {
   observacao: string | null;
   inscricao_id: string | null;
   usado_em: string | null;
+  /** Para quem o cupom vale: o link abre a ficha desse tipo. */
+  tipo: TipoInscricao;
+  /** Token do link de inscrição gerado junto com o cupom. */
+  convite: string | null;
 }
 
 /** Campos que o admin pode alterar numa inscrição. */
@@ -203,9 +207,11 @@ export class Supabase {
   }
 
   /** Lança `SALDO_DOACOES_INSUFICIENTE` se o valor passar do saldo de doações livre. */
-  async gerarCupom(valor: number, observacao: string): Promise<Cupom> {
+  /** Gera o cupom e o link de inscrição dele (ver supabase/cupom-link.sql). */
+  async gerarCupom(valor: number, tipo: TipoInscricao, observacao: string): Promise<Cupom> {
     const { data, error } = await (await this.cliente()).rpc('gerar_cupom', {
       p_valor: valor,
+      p_tipo: tipo,
       p_observacao: observacao,
     });
     if (error) throw error;
@@ -221,7 +227,9 @@ export class Supabase {
   }
 
   /** Tipo e modo do link de inscrição, ou `null` se já foi usado, cancelado ou não existe. */
-  async lerConvite(token: string): Promise<{ tipo: TipoInscricao; modo: ModoConvite } | null> {
+  async lerConvite(
+    token: string,
+  ): Promise<{ tipo: TipoInscricao; modo: ModoConvite; desconto: number | null } | null> {
     const { data, error } = await (await this.cliente()).rpc('ler_convite', { p_token: token });
     if (error) throw error;
     return data;

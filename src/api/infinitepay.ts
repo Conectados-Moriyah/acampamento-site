@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import { Router, json } from 'express';
 import { environment } from '../environments/environment';
 
@@ -27,6 +27,24 @@ function config() {
 
 const centavos = (valor: number) => Math.round(valor * 100);
 
+/**
+ * Quanto falta pagar: valor da inscrição menos o que já entrou no caixa por ela (ex.: cupom de
+ * doação aplicado no link). É o que o checkout cobra.
+ */
+async function restante(supabase: SupabaseClient, id: string, valor: number): Promise<number> {
+  const { data, error } = await supabase
+    .from('movimentos')
+    .select('tipo, valor')
+    .eq('caixa', 'inscricao')
+    .eq('inscricao_id', id);
+  if (error) throw error;
+  const pago = (data as { tipo: string; valor: number }[]).reduce(
+    (t, m) => t + (m.tipo === 'entrada' ? 1 : -1) * Number(m.valor),
+    0,
+  );
+  return Math.max(0, Math.round((Number(valor) - pago) * 100) / 100);
+}
+
 async function post(caminho: string, corpo: unknown): Promise<Response> {
   return fetch(`${API}${caminho}`, {
     method: 'POST',
@@ -52,9 +70,16 @@ infinitepay.post('/checkout', async (req, res) => {
       .eq('id', id)
       .maybeSingle();
     if (error) throw error;
+    // Cupom cobriu tudo: o banco já confirmou a inscrição e não há o que cobrar.
+    if (insc?.status === 'confirmada' && insc.valor && (await restante(supabase, insc.id, insc.valor)) === 0) {
+      return void res.json({ quitada: true });
+    }
     if (!insc || insc.status !== 'pendente' || insc.forma_pagamento !== 'avista' || !insc.valor) {
       return void res.status(409).json({ erro: 'Esta inscrição não está aguardando pagamento.' });
     }
+    const aPagar = await restante(supabase, insc.id, insc.valor);
+    if (aPagar === 0) return void res.json({ quitada: true });
+    const comCupom = aPagar < Number(insc.valor);
 
     const digitos = String(insc.telefone).replace(/\D/g, '');
     const customer: Record<string, string> = { name: insc.nome };
@@ -67,8 +92,8 @@ infinitepay.post('/checkout', async (req, res) => {
       items: [
         {
           quantity: 1,
-          price: centavos(insc.valor),
-          description: `Inscrição Conectados — ${insc.tipo === 'lider' ? 'apoio' : 'participante'} (lote ${insc.lote_numero})`,
+          price: centavos(aPagar),
+          description: `Inscrição Conectados — ${insc.tipo === 'lider' ? 'apoio' : 'participante'} (lote ${insc.lote_numero})${comCupom ? ' com cupom' : ''}`,
         },
       ],
       redirect_url: `${site}/inscricao/pago`,
@@ -124,7 +149,11 @@ async function confirmarPagamento(dados: Record<string, unknown>): Promise<Retor
     .eq('id', order_nsu)
     .maybeSingle();
   if (error) throw error;
-  if (!insc?.valor || (pago.amount ?? 0) < centavos(insc.valor)) {
+  // Compara com o que faltava pagar (o cupom já entrou no caixa). Se já está lançado (webhook
+  // reenviado), não falta nada e não há o que gravar.
+  const aPagar = insc?.valor ? await restante(supabase, String(order_nsu), insc.valor) : 0;
+  if (insc?.valor && aPagar === 0) return { status: 200, corpo: { ok: true } };
+  if (!insc?.valor || (pago.amount ?? 0) < centavos(aPagar)) {
     // Não adianta tentar de novo: avisa no log e encerra para a InfinitePay parar de reenviar.
     console.error(
       'Pagamento InfinitePay com valor divergente',
@@ -137,7 +166,7 @@ async function confirmarPagamento(dados: Record<string, unknown>): Promise<Retor
 
   const { error: erroRpc } = await supabase.rpc('registrar_pagamento_online', {
     p_inscricao: order_nsu,
-    p_valor: insc.valor,
+    p_valor: aPagar,
     p_forma: (pago.capture_method ?? capture_method) === 'pix' ? 'pix' : 'cartao',
     p_nsu: String(transaction_nsu),
   });

@@ -5,6 +5,16 @@
   </div>
 </header>
 
+<!-- Link gerado a partir de um cupom de doação: avisa o desconto antes da ficha. -->
+<ng-template #avisoCupom>
+  @if (desconto(); as d) {
+    <p class="aviso cupom" role="status">
+      🎁 Este link tem um cupom de <strong>{{ d | currency: 'BRL' }}</strong>. O desconto entra
+      automaticamente ao enviar a ficha; se cobrir o valor da inscrição, não há nada a pagar.
+    </p>
+  }
+</ng-template>
+
 <main class="container pagina">
   <div class="cabecalho">
     <h1>Ficha de inscrição{{ lider() ? ' — Líder' : '' }}</h1>
@@ -28,7 +38,9 @@
       <p>
         Obrigado, {{ (nomeLider() || form.controls.pessoais.controls.nome.value).split(' ')[0] }}! Todos os dados
         foram conferidos.
-        @if (carne()) {
+        @if (pagamento.quitada()) {
+          Sua inscrição foi coberta pelo cupom e já está confirmada, sem nada a pagar.
+        } @else if (carne()) {
           O pagamento será feito via carnê; a liderança entrará em contato pelo WhatsApp informado
           com as parcelas.
         } @else {
@@ -50,6 +62,7 @@
       <a class="btn btn--escuro" routerLink="/">Voltar ao site</a>
     </section>
   } @else if (lider()) {
+    <ng-container *ngTemplateOutlet="avisoCupom" />
     <!-- Link de líder (checkout ou carnê): ficha própria do apoio, mais curta. -->
     <app-ficha-lider
       [token]="token!"
@@ -58,6 +71,7 @@
       (linkInvalido)="convite.set('invalido')"
     />
   } @else {
+    <ng-container *ngTemplateOutlet="avisoCupom" />
     <nav class="progresso" aria-label="Etapas da ficha">
       <ol>
         @for (e of etapas; track e.id; let i = $index) {

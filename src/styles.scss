@@ -510,3 +510,6 @@ button { font: inherit; cursor: pointer; }
   &:has(:checked) { background: #e8f7fb; }
   &.erro { border-color: #d6336c; }
 }
+
+/* Aviso de cupom no topo da ficha (link gerado a partir de um cupom de doação). */
+.aviso.cupom { margin-bottom: 16px; font-size: 0.95rem; }

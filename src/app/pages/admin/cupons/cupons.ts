@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Cupom, Inscricao, Movimento, Supabase } from '../../../core/supabase';
+import { Cupom, Inscricao, Movimento, Supabase, TipoInscricao } from '../../../core/supabase';
 
 const mensagem = (e: unknown) => String((e as { message?: string })?.message ?? '');
 
@@ -18,7 +18,10 @@ export class CuponsPage {
   readonly inscricoes = input.required<Inscricao[]>();
   readonly alterado = output();
 
+  protected readonly tipo = signal<TipoInscricao>('participante');
   protected readonly valor = signal('');
+  /** Cupom cujo link acabou de ser copiado (mostra "Copiado!"). */
+  protected readonly copiado = signal<string | null>(null);
   protected readonly observacao = signal('');
   protected readonly gerando = signal(false);
   protected readonly erro = signal<string | null>(null);
@@ -62,7 +65,7 @@ export class CuponsPage {
     this.gerando.set(true);
     this.erro.set(null);
     try {
-      this.gerado.set(await this.supabase.gerarCupom(valor, this.observacao()));
+      this.gerado.set(await this.supabase.gerarCupom(valor, this.tipo(), this.observacao()));
       this.valor.set('');
       this.observacao.set('');
       this.alterado.emit();
@@ -99,8 +102,25 @@ export class CuponsPage {
     }
   }
 
-  protected copiar(codigo: string): void {
-    navigator.clipboard?.writeText(codigo);
+  /** Link da ficha com o cupom (participante ou líder, conforme o tipo do cupom). */
+  protected link(c: Cupom): string {
+    return `${location.origin}/inscricao?convite=${c.convite}`;
+  }
+
+  protected whatsapp(c: Cupom): string {
+    const quem = c.tipo === 'lider' ? 'de líder ' : '';
+    const texto = `Olá! Segue o link para a sua ficha de inscrição ${quem}no Acampamento Jovem Conectados, com um cupom de desconto: ${this.link(c)}`;
+    return `https://wa.me/?text=${encodeURIComponent(texto)}`;
+  }
+
+  protected async copiar(c: Cupom): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.link(c));
+      this.copiado.set(c.id);
+      setTimeout(() => this.copiado.set(null), 2000);
+    } catch {
+      prompt('Copie o link:', this.link(c));
+    }
   }
 
   protected texto(evento: Event): string {

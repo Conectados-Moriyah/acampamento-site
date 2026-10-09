@@ -13,7 +13,12 @@ input, select {
   width: 100%; min-width: 0; box-sizing: border-box; padding: 8px 10px; font: inherit;
   color: var(--azul-900); background: var(--branco); border: 2px solid var(--azul-500);
 }
-.novo { margin: 12px 0 0; padding: 10px 12px; border: 2px dashed var(--ciano); }
+.novo {
+  display: grid; gap: 8px; margin: 12px 0 0; padding: 10px 12px; border: 2px dashed var(--ciano);
+  p { margin: 0; }
+  .url { overflow-wrap: anywhere; font-size: 0.85rem; }
+  .acoes { display: flex; flex-wrap: wrap; gap: 10px; }
+}
 
 .rolagem { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }

@@ -9,7 +9,11 @@ import { Pagamento } from '../../../core/pagamento';
   styleUrl: '../inscricao.scss',
   template: `
     <section class="cartao fim">
-      @if (pagamento.indisponivel()) {
+      @if (pagamento.quitada()) {
+        <h2>Inscrição já quitada</h2>
+        <p>O cupom cobriu o valor da inscrição. Não há nada a pagar.</p>
+        <a class="btn btn--escuro" routerLink="/">Voltar ao site</a>
+      } @else if (pagamento.indisponivel()) {
         <h2>Nada a pagar por aqui</h2>
         <p>Esta inscrição não está aguardando pagamento. Se tiver dúvidas, fale com a liderança.</p>
         <a class="btn btn--escuro" routerLink="/">Voltar ao site</a>
