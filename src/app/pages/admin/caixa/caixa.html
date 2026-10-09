@@ -73,18 +73,18 @@
   <p class="nota">Nenhum lançamento.</p>
 } @else {
   <div class="rolagem">
-    <table>
+    <table class="tabela-cartoes">
       <thead>
         <tr><th>Data</th><th>Caixa</th><th>Descrição</th><th>Forma</th><th class="num">Valor</th><th></th></tr>
       </thead>
       <tbody>
         @for (m of filtrados(); track m.id) {
           <tr>
-            <td>{{ m.data | date: 'dd/MM/yy' }}</td>
-            <td>{{ m.caixa === 'doacao' ? 'Doações' : 'Inscrições' }}</td>
-            <td>{{ m.descricao }}@if (nome(m.inscricao_id) && !m.descricao.includes(nome(m.inscricao_id))) { <small> · {{ nome(m.inscricao_id) }}</small> }</td>
-            <td>{{ m.forma ?? '—' }}</td>
-            <td class="num" [class.mais]="m.tipo === 'entrada'" [class.menos]="m.tipo === 'saida'">
+            <td data-rotulo="Data">{{ m.data | date: 'dd/MM/yy' }}</td>
+            <td data-rotulo="Caixa">{{ m.caixa === 'doacao' ? 'Doações' : 'Inscrições' }}</td>
+            <td data-rotulo="Descrição" class="tabela-cartoes__titulo">{{ m.descricao }}@if (nome(m.inscricao_id) && !m.descricao.includes(nome(m.inscricao_id))) { <small> · {{ nome(m.inscricao_id) }}</small> }</td>
+            <td data-rotulo="Forma">{{ m.forma ?? '—' }}</td>
+            <td data-rotulo="Valor" class="num" [class.mais]="m.tipo === 'entrada'" [class.menos]="m.tipo === 'saida'">
               {{ m.tipo === 'entrada' ? '+' : '−' }} {{ m.valor | currency: 'BRL' }}
             </td>
             <td>

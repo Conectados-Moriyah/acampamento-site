@@ -8,6 +8,7 @@ h4 { margin: 0; font-size: 0.95rem; }
 .linha { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
 label { display: grid; gap: 4px; flex: 0 1 170px; min-width: 0; font-size: 0.85rem; color: var(--texto-claro); }
 .largo { flex: 1 1 240px; }
+@media (max-width: 640px) { label, .largo { flex: 1 1 100%; } .linha .btn { width: 100%; } }
 input, select {
   width: 100%; min-width: 0; box-sizing: border-box; padding: 8px 10px; font: inherit;
   color: var(--azul-900); background: var(--branco); border: 2px solid var(--azul-500);

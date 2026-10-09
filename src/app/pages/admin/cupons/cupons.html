@@ -44,19 +44,19 @@
   <p class="nota">Nenhum cupom gerado.</p>
 } @else {
   <div class="rolagem">
-    <table>
+    <table class="tabela-cartoes">
       <thead>
         <tr><th>Código</th><th>Para</th><th class="num">Valor</th><th>Status</th><th>Observação</th><th>Usado por</th><th></th></tr>
       </thead>
       <tbody>
         @for (c of cupons(); track c.id) {
           <tr [class.inativo]="c.status !== 'disponivel'">
-            <td><code>{{ c.codigo }}</code></td>
-            <td>{{ c.tipo === 'lider' ? 'Líder' : 'Participante' }}</td>
-            <td class="num">{{ c.valor | currency: 'BRL' }}</td>
-            <td><span class="selo" [attr.data-status]="c.status">{{ c.status === 'disponivel' ? 'Disponível' : c.status === 'usado' ? 'Usado' : 'Cancelado' }}</span></td>
-            <td>{{ c.observacao ?? '—' }}</td>
-            <td>{{ c.status === 'usado' ? nome(c.inscricao_id) + ' · ' + (c.usado_em | date: 'dd/MM/yy') : '—' }}</td>
+            <td data-rotulo="Código" class="tabela-cartoes__titulo"><code>{{ c.codigo }}</code></td>
+            <td data-rotulo="Para">{{ c.tipo === 'lider' ? 'Líder' : 'Participante' }}</td>
+            <td data-rotulo="Valor" class="num">{{ c.valor | currency: 'BRL' }}</td>
+            <td data-rotulo="Status"><span class="selo" [attr.data-status]="c.status">{{ c.status === 'disponivel' ? 'Disponível' : c.status === 'usado' ? 'Usado' : 'Cancelado' }}</span></td>
+            <td data-rotulo="Observação">{{ c.observacao ?? '—' }}</td>
+            <td data-rotulo="Usado por">{{ c.status === 'usado' ? nome(c.inscricao_id) + ' · ' + (c.usado_em | date: 'dd/MM/yy') : '—' }}</td>
             <td class="acoes">
               @if (c.status === 'disponivel') {
                 @if (aplicando() === c.id) {

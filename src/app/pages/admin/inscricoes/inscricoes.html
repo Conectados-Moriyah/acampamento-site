@@ -62,22 +62,22 @@
           <p>Nenhuma inscrição encontrada.</p>
         } @else {
           <div class="admin__rolagem">
-          <table class="admin__tabela">
+          <table class="admin__tabela tabela-cartoes">
             <thead>
               <tr><th>Data</th><th>Nome</th><th>Tipo</th><th>Lote</th><th>Valor</th><th>Pago</th><th>Telefone</th><th>Status</th><th></th></tr>
             </thead>
             <tbody>
               @for (i of filtradas(); track i.id) {
                 <tr [class.admin__cancelada]="i.status === 'cancelada'">
-                  <td>{{ i.criada_em | date: 'dd/MM/yy HH:mm' }}</td>
-                  <td>{{ i.nome }}</td>
-                  <td>{{ i.tipo === 'lider' ? 'Líder' : 'Participante' }}</td>
-                  <td>{{ i.lote_numero ? i.lote_numero + 'º' : '—' }}</td>
-                  <td>{{ i.valor !== null ? (i.valor | currency: 'BRL') : '—' }}</td>
+                  <td data-rotulo="Data">{{ i.criada_em | date: 'dd/MM/yy HH:mm' }}</td>
+                  <td data-rotulo="Nome" class="tabela-cartoes__titulo">{{ i.nome }}</td>
+                  <td data-rotulo="Tipo">{{ i.tipo === 'lider' ? 'Líder' : 'Participante' }}</td>
+                  <td data-rotulo="Lote">{{ i.lote_numero ? i.lote_numero + 'º' : '—' }}</td>
+                  <td data-rotulo="Valor">{{ i.valor !== null ? (i.valor | currency: 'BRL') : '—' }}</td>
                   @let pago = pagoPorInscricao().get(i.id) ?? 0;
-                  <td [class.admin__quitado]="i.valor !== null && pago >= i.valor">{{ pago | currency: 'BRL' }}</td>
-                  <td>{{ i.telefone }}</td>
-                  <td>
+                  <td data-rotulo="Pago" [class.admin__quitado]="i.valor !== null && pago >= i.valor">{{ pago | currency: 'BRL' }}</td>
+                  <td data-rotulo="Telefone">{{ i.telefone }}</td>
+                  <td data-rotulo="Status">
                     <select class="admin__status" [attr.data-status]="i.status" [value]="i.status" (change)="mudarStatus(i, valor($event))">
                       <option value="pendente">Pendente</option>
                       <option value="confirmada">Confirmada</option>

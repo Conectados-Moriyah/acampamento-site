@@ -70,7 +70,8 @@
 
   /* Celular: menu vira barra no topo; o ☰ mostra navegação e Sair. */
   @media (max-width: 768px) {
-    &__layout { grid-template-columns: 1fr; }
+    // 100% e não 1fr: com 1fr a coluna crescia até a largura da tabela e cortava o conteúdo.
+    &__layout { grid-template-columns: 100%; }
     &__layout > .admin { padding: 20px 16px; }
     &__menu {
       position: sticky; z-index: 70; height: auto; gap: 0; padding: 12px;

@@ -509,6 +509,26 @@ button { font: inherit; cursor: pointer; }
   strong { display: block; }
   &:has(:checked) { background: #e8f7fb; }
   &.erro { border-color: #d6336c; }
+
+/* ---------- Admin no celular: tabelas viram cartões ----------
+   Cada <td> leva data-rotulo com o nome da coluna; o .tabela-cartoes__titulo vira o título do cartão.
+   Fica aqui (global) porque é usado por várias abas do admin. */
+@media (max-width: 640px) {
+  .tabela-cartoes {
+    display: block;
+    thead { display: none; }
+    tbody { display: grid; gap: 10px; }
+    tr { display: grid; gap: 2px; padding: 12px; background: var(--azul-800); border-left: 3px solid var(--ciano); }
+    td {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      padding: 3px 0 !important; border: 0 !important; white-space: normal !important; text-align: right !important;
+      &::before { content: attr(data-rotulo); flex: none; font-size: 0.8rem; color: var(--texto-claro); text-align: left; }
+      // Coluna de ações (sem rótulo): botões dividem a linha por igual.
+      &:not([data-rotulo]) { justify-content: flex-start; gap: 6px; padding-top: 8px !important; &::before { content: none; } > * { flex: 1 1 0; min-width: 0; margin: 0 !important; } }
+    }
+    .tabela-cartoes__titulo { order: -1; padding-bottom: 6px !important; font-weight: 700; font-size: 1.05rem; text-align: left !important; &::before { content: none; } }
+  }
+}
 }
 
 /* Aviso de cupom no topo da ficha (link gerado a partir de um cupom de doação). */
