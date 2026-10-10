@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Ícone do Conectados: o "T" do logo com o sinal de wifi laranja em cima. -->
+  <rect width="64" height="64" rx="14" fill="#070d2e"/>
+  <g fill="none" stroke="#ff8a1f" stroke-width="4.5" stroke-linecap="round">
+    <path d="M17.4 21.4 A18 18 0 0 1 46.6 21.4"/>
+    <path d="M22.4 25.6 A11.5 11.5 0 0 1 41.6 25.6"/>
+    <path d="M27.3 29.6 A5.5 5.5 0 0 1 36.7 29.6"/>
+  </g>
+  <path d="M15 35h34v6.5H35.5V56h-7V41.5H15z" fill="#ffffff"/>
+</svg>
