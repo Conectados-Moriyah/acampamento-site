@@ -1,5 +1,6 @@
 import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 
 type Situacao = 'conferindo' | 'confirmado' | 'pendente';
 
@@ -55,7 +56,7 @@ export class Pago {
       return;
     }
     try {
-      const resposta = await fetch('/api/pagamento/confirmar', {
+      const resposta = await fetch(`${environment.funcoesUrl}/pagamento-confirmar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(corpo),

@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class Pagamento {
@@ -18,7 +19,7 @@ export class Pagamento {
     this.indisponivel.set(false);
     this.quitada.set(false);
     try {
-      const resposta = await fetch('/api/checkout', {
+      const resposta = await fetch(`${environment.funcoesUrl}/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inscricaoId }),

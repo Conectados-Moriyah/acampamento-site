@@ -143,7 +143,7 @@ export class AdminInscricoes {
   }
 
   private linkPagamento(i: Inscricao): string {
-    return `${location.origin}/inscricao/pagar/${i.id}`;
+    return new URL(`inscricao/pagar/${i.id}`, document.baseURI).href; // respeita a subpasta do Pages
   }
 
   /** Abre o WhatsApp da pessoa com o link para pagar a inscrição (o checkout é gerado ao abrir). */

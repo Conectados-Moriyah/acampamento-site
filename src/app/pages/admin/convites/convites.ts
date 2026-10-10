@@ -49,7 +49,8 @@ export class ConvitesPage {
   }
 
   protected link(c: Convite): string {
-    return `${location.origin}/inscricao?convite=${c.token}`;
+    // baseURI (e não origin): no GitHub Pages o site fica numa subpasta (/acampamento-site/).
+    return new URL(`inscricao?convite=${c.token}`, document.baseURI).href;
   }
 
   protected whatsapp(c: Convite): string {

@@ -44,3 +44,7 @@ __screenshots__/
 Thumbs.db
 
 .env
+# Segredos das Edge Functions e arquivos locais da Supabase CLI
+supabase/functions/.env
+supabase/.temp/
+supabase/.branches/

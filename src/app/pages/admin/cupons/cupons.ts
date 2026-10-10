@@ -104,7 +104,7 @@ export class CuponsPage {
 
   /** Link da ficha com o cupom (participante ou líder, conforme o tipo do cupom). */
   protected link(c: Cupom): string {
-    return `${location.origin}/inscricao?convite=${c.convite}`;
+    return new URL(`inscricao?convite=${c.convite}`, document.baseURI).href; // respeita a subpasta do Pages
   }
 
   protected whatsapp(c: Cupom): string {

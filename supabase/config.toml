@@ -1,0 +1,15 @@
+# Configuração da Supabase CLI (só as Edge Functions são gerenciadas por aqui; o banco é feito
+# pelos scripts .sql desta pasta).
+project_id = "cutjfdfplyiutcbfulqo"
+
+# As funções de pagamento são chamadas pelo site (chave publishable, que não é JWT) e pela
+# InfinitePay (sem chave nenhuma), então não exigem JWT. A proteção está no próprio código: o valor
+# vem do banco e todo pagamento é conferido na InfinitePay antes de ser lançado.
+[functions.checkout]
+verify_jwt = false
+
+[functions.infinitepay-webhook]
+verify_jwt = false
+
+[functions.pagamento-confirmar]
+verify_jwt = false
