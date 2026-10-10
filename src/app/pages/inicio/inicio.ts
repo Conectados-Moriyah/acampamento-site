@@ -147,7 +147,7 @@ export class Inicio {
     instagramConectados: 'https://www.instagram.com/conectados_icem/',
     instagramIgreja: 'https://www.instagram.com/emanuelmoriyah/',
     igrejaMapa: 'https://maps.app.goo.gl/tPZR64uJ4TNGmBQ18',
-    whatsapp: 'https://wa.me/5561999073219',
+    whatsapp: 'https://wa.me/5561993601769',
   };
 
   protected readonly menuAberto = signal(false);
