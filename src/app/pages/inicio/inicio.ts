@@ -138,7 +138,7 @@ export class Inicio {
     {
       pergunta: 'Quais são as formas de pagamento?',
       resposta:
-        'Pelo site, você paga com Pix ou cartão de crédito ou débito, logo depois de preencher a ficha de inscrição. Para pagar em dinheiro, procure a liderança.',
+        'Pelo site, você paga com Pix ou cartão de crédito, logo depois de preencher a ficha de inscrição. Para pagar em dinheiro, procure a liderança.',
     },
   ];
 
