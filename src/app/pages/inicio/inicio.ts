@@ -29,6 +29,7 @@ const INICIO_EVENTO = new Date('2027-02-06T10:00:00-03:00').getTime();
 })
 export class Inicio {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly supabase = inject(Supabase);
 
   protected readonly menu = [
@@ -160,6 +161,7 @@ export class Inicio {
     { tipo: 'foto', src: 'img/galeria-2.jpg', alt: 'Foto em grupo dos participantes do Conectados' },
   ];
   protected readonly tocando = signal(false);
+  protected readonly somLigado = signal(false);
   protected readonly totalSlides = this.midias.length;
   protected readonly slides = Array.from({ length: this.totalSlides }, (_, i) => i);
 
@@ -182,6 +184,11 @@ export class Inicio {
 
     // Tudo que depende de window/IntersectionObserver roda só no navegador (o site é pré-renderizado).
     afterNextRender(() => {
+      // Vídeo com som: tenta tocar com som; se o navegador bloquear (ele só permite som depois de
+      // uma interação), toca mudo e liga o som no primeiro clique/toque/tecla na página.
+      const video = this.host.nativeElement.querySelector<HTMLVideoElement>('.carrossel video');
+      if (video) this.tocarComSom(video);
+
       this.supabase
         .listarLotes()
         .then((todos) => {
@@ -231,6 +238,35 @@ export class Inicio {
 
   protected fecharMenu(): void {
     this.menuAberto.set(false);
+  }
+
+  private tocarComSom(video: HTMLVideoElement): void {
+    video.muted = false;
+    video
+      .play()
+      .then(() => this.somLigado.set(true))
+      .catch(() => {
+        video.muted = true;
+        video.play().catch(() => undefined); // se nem mudo tocar (economia de dados etc.), fica o ▶
+        const eventos = ['pointerdown', 'keydown', 'touchstart'] as const;
+        const ligar = (e: Event) => {
+          eventos.forEach((n) => document.removeEventListener(n, ligar, true));
+          // Clique no próprio botão de som: ele mesmo decide (evita ligar e desligar na hora).
+          if ((e.target as HTMLElement)?.closest?.('[data-som]') || !video.muted) return;
+          video.muted = false;
+          this.somLigado.set(true);
+          if (video.paused) video.play().catch(() => undefined);
+        };
+        eventos.forEach((n) => document.addEventListener(n, ligar, { capture: true, passive: true }));
+        this.destroyRef.onDestroy(() => eventos.forEach((n) => document.removeEventListener(n, ligar, true)));
+      });
+  }
+
+  /** Liga/desliga o som do vídeo. */
+  protected alternarSom(video: HTMLVideoElement): void {
+    video.muted = !video.muted;
+    this.somLigado.set(!video.muted);
+    if (!video.muted && video.paused) void video.play();
   }
 
   protected alternarVideo(video: HTMLVideoElement): void {

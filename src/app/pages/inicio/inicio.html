@@ -83,10 +83,11 @@
               <video
                 #video
                 [src]="m.src"
+                autoplay
                 playsinline
                 loop
                 muted
-                preload="metadata"
+                preload="auto"
                 tabindex="-1"
                 (click)="alternarVideo(video)"
                 (play)="tocando.set(true)"
@@ -94,6 +95,7 @@
               ></video>
               <div class="carrossel__controles">
                 <button type="button" [attr.aria-label]="tocando() ? 'Pausar vídeo' : 'Reproduzir vídeo'" [attr.tabindex]="s === slideAtual() ? 0 : -1" (click)="alternarVideo(video)">{{ tocando() ? '❚❚' : '▶' }}</button>
+                <button type="button" data-som [attr.aria-label]="somLigado() ? 'Desligar som' : 'Ligar som'" [attr.aria-pressed]="somLigado()" [attr.tabindex]="s === slideAtual() ? 0 : -1" (click)="alternarSom(video)">{{ somLigado() ? '🔊' : '🔇' }}</button>
               </div>
             } @else {
               <img [src]="m.src" [alt]="m.alt" loading="lazy" />
