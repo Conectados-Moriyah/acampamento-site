@@ -137,7 +137,8 @@ export class Inicio {
     },
     {
       pergunta: 'Quais são as formas de pagamento?',
-      resposta: 'As formas de pagamento serão divulgadas quando as inscrições forem abertas.',
+      resposta:
+        'Pelo site, você paga com Pix ou cartão de crédito ou débito, logo depois de preencher a ficha de inscrição. Para pagar em dinheiro, procure a liderança.',
     },
   ];
 
