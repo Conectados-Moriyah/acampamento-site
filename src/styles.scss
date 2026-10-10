@@ -28,6 +28,9 @@ html {
   scroll-behavior: smooth;
   overflow-x: clip; // no celular, só o body com hidden ainda deixava a página rolar para o lado
   scroll-padding-top: calc(var(--topo-altura) + 12px);
+  // Computador: fonte base maior. Os tamanhos do site estão em rem, então tudo cresce junto.
+  @media (min-width: 1024px) { font-size: 112.5%; }
+  @media (min-width: 1440px) { font-size: 125%; }
 }
 
 body {
@@ -253,12 +256,15 @@ button { font: inherit; cursor: pointer; }
 /* ---------- Tema ---------- */
 .tema {
   text-align: center; padding: 24px 0 96px;
+  > .script { font-size: clamp(1.4rem, 3.5vw, 2.2rem); margin-bottom: 4px; }
   .selos { display: flex; justify-content: center; gap: 8px; margin: 8px 0 18px;
     span { background: var(--branco); color: var(--azul-900); padding: 2px 10px; font-family: var(--fonte-titulo); text-transform: uppercase; font-size: 0.8rem; }
     .laranja { background: var(--laranja); } }
   &__titulo {
     font-size: clamp(3.2rem, 13vw, 7.5rem); line-height: 0.92;
-    em { display: inline-block; font-style: normal; color: var(--azul-900); background: var(--ciano); padding: 0 12px; transform: rotate(-2deg); }
+    // Padding em cima: com line-height 0.92 o til do "NÃO" ficava fora do fundo ciano, escuro sobre
+    // o fundo escuro da página, e sumia.
+    em { display: inline-block; font-style: normal; color: var(--azul-900); background: var(--ciano); padding: 0.16em 12px 0; line-height: 1; transform: rotate(-2deg); }
   }
   blockquote {
     margin: 28px 0 0; font-family: var(--fonte-titulo); font-size: clamp(1.2rem, 3vw, 1.7rem); text-transform: uppercase;
