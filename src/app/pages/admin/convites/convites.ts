@@ -49,7 +49,7 @@ export class ConvitesPage {
   }
 
   protected link(c: Convite): string {
-    // baseURI (e não origin): no GitHub Pages o site fica numa subpasta (/acampamento-site/).
+    // baseURI (e não origin): continua certo se o site voltar a ficar numa subpasta.
     return new URL(`inscricao?convite=${c.token}`, document.baseURI).href;
   }
 

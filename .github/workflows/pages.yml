@@ -1,4 +1,4 @@
-# Publica o site no GitHub Pages: https://conectados-moriyah.github.io/acampamento-site/
+# Publica o site no GitHub Pages: https://conectadosicem.com.br (dominio proprio, DNS no Cloudflare)
 # Roda a cada push na main (ou à mão, em Actions > Deploy GitHub Pages > Run workflow).
 # Requer: Settings > Pages > Source = "GitHub Actions".
 # O pagamento roda nas Supabase Edge Functions (supabase/functions); nenhum segredo vai para cá.
