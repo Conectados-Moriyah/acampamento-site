@@ -168,6 +168,38 @@
                 @if (invalido('pessoais', 'email')) { <em>{{ erro('pessoais', 'email') }}</em> }
               </label>
             </div>
+            <div class="pergunta" role="radiogroup" aria-labelledby="p-conhecido">
+              <p id="p-conhecido">Você possui algum amigo ou parente inscrito no acampamento? *</p>
+              <div class="opcoes">
+                <label class="opcao"><input type="radio" formControlName="conhecido" value="sim" /> Sim</label>
+                <label class="opcao"><input type="radio" formControlName="conhecido" value="nao" /> Não</label>
+              </div>
+              @if (invalido('pessoais', 'conhecido')) { <em>Escolha uma opção.</em> }
+              @if (campo('pessoais', 'conhecidoTipo').enabled) {
+                <div class="detalhe">
+                  <p>É amigo ou parente? *</p>
+                  <div class="opcoes">
+                    <label class="opcao"><input type="radio" formControlName="conhecidoTipo" value="amigo" /> Amigo</label>
+                    <label class="opcao"><input type="radio" formControlName="conhecidoTipo" value="parente" /> Parente</label>
+                  </div>
+                  @if (invalido('pessoais', 'conhecidoTipo')) { <em>Escolha uma opção.</em> }
+                </div>
+              }
+              @if (campo('pessoais', 'conhecidoNome').enabled) {
+                <label class="detalhe">
+                  Nome completo do {{ campo('pessoais', 'conhecidoTipo').value }} *
+                  <input formControlName="conhecidoNome" [class.erro]="invalido('pessoais', 'conhecidoNome')" />
+                  @if (invalido('pessoais', 'conhecidoNome')) { <em>{{ erro('pessoais', 'conhecidoNome') }}</em> }
+                </label>
+              }
+              @if (campo('pessoais', 'conhecidoParentesco').enabled) {
+                <label class="detalhe">
+                  Grau de parentesco *
+                  <input formControlName="conhecidoParentesco" placeholder="Ex.: irmão, primo, tia" [class.erro]="invalido('pessoais', 'conhecidoParentesco')" />
+                  @if (invalido('pessoais', 'conhecidoParentesco')) { <em>{{ erro('pessoais', 'conhecidoParentesco') }}</em> }
+                </label>
+              }
+            </div>
           </fieldset>
         }
 

@@ -10,7 +10,13 @@ import {
 } from '@angular/forms';
 import { Pagamento } from '../../../core/pagamento';
 import { Supabase } from '../../../core/supabase';
-import { cpf, mascaras, nomeCompleto, telefone } from '../validadores';
+import { calcularIdade, cpf, dataBr, lerDataBr, mascaras, nomeCompleto, telefone } from '../validadores';
+
+/** O apoio precisa ter pelo menos 14 anos. */
+const idadeMinima = (c: AbstractControl<string>): ValidationErrors | null => {
+  const data = lerDataBr(c.value);
+  return data && calcularIdade(data) < 14 ? { idadeMinima: true } : null;
+};
 
 type Mascara = keyof typeof mascaras;
 
@@ -54,7 +60,9 @@ export class FichaLider {
   protected readonly form = this.fb.group({
     pessoais: this.fb.group({
       nome: ['', [Validators.required, nomeCompleto]],
-      idade: ['', [Validators.required, Validators.min(14), Validators.max(99)]],
+      genero: ['', Validators.required],
+      nascimento: ['', [Validators.required, dataBr, idadeMinima]],
+      idade: [{ value: '', disabled: true }],
       cpf: ['', [Validators.required, cpf]],
       telefone: ['', [Validators.required, telefone]],
     }),
@@ -82,6 +90,13 @@ export class FichaLider {
     const saude = this.form.controls.saude.controls;
     this.ligarDetalhe(saude.alergia, saude.alergiaQual);
     this.ligarDetalhe(saude.restricao, saude.restricaoQual);
+
+    // Idade calculada pela data de nascimento (só leitura; vai em `dados` pelo getRawValue).
+    const pessoais = this.form.controls.pessoais.controls;
+    pessoais.nascimento.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((v) => {
+      const data = pessoais.nascimento.valid ? lerDataBr(v) : null;
+      pessoais.idade.setValue(data ? `${calcularIdade(data)} anos` : '');
+    });
   }
 
   private ligarDetalhe(resposta: AbstractControl<string>, detalhe: AbstractControl<string>): void {
@@ -110,7 +125,9 @@ export class FichaLider {
     const e = this.campo(grupo, nome).errors ?? {};
     if (e['required']) return 'Campo obrigatório.';
     if (e['nomeCompleto']) return 'Informe nome e sobrenome, apenas com letras.';
-    if (e['min'] || e['max']) return 'Idade inválida.';
+    if (e['dataInvalida']) return 'Data inválida. Use o formato dd/mm/aaaa.';
+    if (e['dataFutura']) return 'A data de nascimento não pode estar no futuro.';
+    if (e['idadeMinima']) return 'O apoio precisa ter pelo menos 14 anos.';
     if (e['cpf']) return 'CPF inválido.';
     if (e['telefone']) return 'Telefone inválido. Use DDD + número, ex.: (11) 91234-5678.';
     return '';
@@ -153,7 +170,9 @@ export class FichaLider {
     try {
       const dados = this.form.getRawValue();
       const id = await this.supabase.enviarInscricao(dados, this.token());
+      // Mantém o botão em "enviando" enquanto o navegador troca para o checkout (mesma aba).
       if (this.checkout() && (await this.pagamento.irParaCheckout(id))) return;
+      this.enviando.set(false);
       this.enviada.emit(dados.pessoais.nome);
     } catch (e) {
       const msg = String((e as { message?: string })?.message);
@@ -163,7 +182,6 @@ export class FichaLider {
           ? 'As vagas de apoio estão encerradas no momento. Fale com a liderança.'
           : 'Não foi possível enviar a ficha. Verifique sua internet e tente novamente.',
       );
-    } finally {
       this.enviando.set(false);
     }
   }
