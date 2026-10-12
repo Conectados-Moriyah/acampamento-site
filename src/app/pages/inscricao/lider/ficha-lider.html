@@ -31,18 +31,38 @@
           <input formControlName="nome" autocomplete="name" [class.erro]="invalido('pessoais', 'nome')" />
           @if (invalido('pessoais', 'nome')) { <em>{{ erro('pessoais', 'nome') }}</em> }
         </label>
+        <div class="pergunta">
+          <p>Gênero *</p>
+          <div class="opcoes">
+            <label class="opcao"><input type="radio" formControlName="genero" value="masculino" /> Masculino</label>
+            <label class="opcao"><input type="radio" formControlName="genero" value="feminino" /> Feminino</label>
+          </div>
+          @if (invalido('pessoais', 'genero')) { <em>Escolha uma opção.</em> }
+        </div>
         <div class="linha">
           <label>
-            Idade *
-            <input formControlName="idade" type="number" inputmode="numeric" min="14" max="99" [class.erro]="invalido('pessoais', 'idade')" />
-            @if (invalido('pessoais', 'idade')) { <em>{{ erro('pessoais', 'idade') }}</em> }
+            Data de nascimento *
+            <input
+              formControlName="nascimento"
+              inputmode="numeric"
+              placeholder="dd/mm/aaaa"
+              maxlength="10"
+              autocomplete="bday"
+              [class.erro]="invalido('pessoais', 'nascimento')"
+              (input)="mascarar($event, 'pessoais', 'nascimento', 'data')"
+            />
+            @if (invalido('pessoais', 'nascimento')) { <em>{{ erro('pessoais', 'nascimento') }}</em> }
           </label>
           <label>
-            CPF *
-            <input formControlName="cpf" inputmode="numeric" placeholder="000.000.000-00" [class.erro]="invalido('pessoais', 'cpf')" (input)="mascarar($event, 'pessoais', 'cpf', 'cpf')" />
-            @if (invalido('pessoais', 'cpf')) { <em>{{ erro('pessoais', 'cpf') }}</em> }
+            Idade
+            <input formControlName="idade" placeholder="Calculada pela data" />
           </label>
         </div>
+        <label>
+          CPF *
+          <input formControlName="cpf" inputmode="numeric" placeholder="000.000.000-00" [class.erro]="invalido('pessoais', 'cpf')" (input)="mascarar($event, 'pessoais', 'cpf', 'cpf')" />
+          @if (invalido('pessoais', 'cpf')) { <em>{{ erro('pessoais', 'cpf') }}</em> }
+        </label>
         <label>
           Telefone do apoio (WhatsApp) *
           <input formControlName="telefone" type="tel" placeholder="(00) 00000-0000" autocomplete="tel" [class.erro]="invalido('pessoais', 'telefone')" (input)="mascarar($event, 'pessoais', 'telefone', 'telefone')" />

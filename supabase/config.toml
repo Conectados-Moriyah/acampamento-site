@@ -1,5 +1,5 @@
-# Configuração da Supabase CLI (só as Edge Functions são gerenciadas por aqui; o banco é feito
-# pelos scripts .sql desta pasta).
+# Configuração da Supabase CLI. O banco é definido pelas migrations (supabase/migrations/) e o banco
+# local de teste recebe também supabase/seed.sql (npm run db:reset).
 project_id = "cutjfdfplyiutcbfulqo"
 
 # As funções de pagamento são chamadas pelo site (chave publishable, que não é JWT) e pela

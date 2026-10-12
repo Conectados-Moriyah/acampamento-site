@@ -11,6 +11,10 @@ export const ETAPAS: { id: string; titulo: string; campos: Record<string, string
       cpf: 'CPF',
       telefone: 'Telefone',
       email: 'E-mail',
+      conhecido: 'Tem amigo/parente inscrito',
+      conhecidoTipo: 'Amigo ou parente',
+      conhecidoNome: 'Nome do amigo/parente',
+      conhecidoParentesco: 'Grau de parentesco',
     },
   },
   {
@@ -98,6 +102,8 @@ export function textoValor(v: string | boolean | undefined): string {
   if (v === 'outra') return 'Outra';
   if (v === 'masculino') return 'Masculino';
   if (v === 'feminino') return 'Feminino';
+  if (v === 'amigo') return 'Amigo';
+  if (v === 'parente') return 'Parente';
   if (v === 'avista') return 'À vista';
   if (v === 'carne') return 'Carnê';
   return v ?? '';

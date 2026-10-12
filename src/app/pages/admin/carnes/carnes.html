@@ -23,11 +23,16 @@
         <select [value]="novoInscrito()" (change)="novoInscrito.set(texto($event))">
           <option value="">Escolha…</option>
           @for (i of semCarne(); track i.id) {
-            <option [value]="i.id">{{ i.nome }} — {{ i.valor | currency: 'BRL' }}</option>
+            <option [value]="i.id">
+              {{ i.nome }} — {{ i.valor | currency: 'BRL' }} · {{ i.status === 'confirmada' ? 'Confirmada' : 'Pendente' }} · {{ i.criada_em | date: 'dd/MM' }}
+            </option>
           }
         </select>
       </label>
     }
+    <label>Pagador
+      <input placeholder="Vazio = a própria pessoa" [value]="pagador()" (change)="pagador.set(texto($event))" />
+    </label>
     <label>Parcelas
       <input type="number" min="1" max="12" [value]="totalParcelas()" (change)="totalParcelas.set(+texto($event))" />
     </label>
@@ -49,6 +54,18 @@
       <div>
         <h3>{{ c.inscricao.nome }}</h3>
         <small>{{ c.inscricao.telefone }} · {{ c.inscricao.tipo === 'lider' ? 'Líder' : 'Participante' }}</small>
+        @if (editandoPagador() === c.inscricao.id) {
+          <span class="baixa pagador">
+            <input aria-label="Pagador" placeholder="Vazio = a própria pessoa" [value]="novoPagador()" (input)="novoPagador.set(texto($event))" />
+            <button class="btn btn--azul btn--sm" type="button" [disabled]="ocupado()" (click)="salvarPagador(c.inscricao)">Salvar</button>
+            <button class="link" type="button" (click)="editandoPagador.set(null)">Cancelar</button>
+          </span>
+        } @else {
+          <small class="pagador">
+            Pagador: {{ c.inscricao.pagador || 'a própria pessoa' }}
+            <button class="link" type="button" (click)="abrirPagador(c.inscricao)">alterar</button>
+          </small>
+        }
       </div>
       <p class="progresso">
         <strong>{{ c.pago | currency: 'BRL' }}</strong> de {{ (c.total || c.inscricao.valor) | currency: 'BRL' }}
@@ -66,9 +83,23 @@
           <li [attr.data-situacao]="s">
             <span class="num">{{ p.numero }}/{{ p.total }}</span>
             <span>{{ p.valor | currency: 'BRL' }}</span>
-            <span>vence {{ p.vencimento | date: 'dd/MM/yy' }}</span>
+            @if (editandoVencimento() === p.id) {
+              <span class="baixa">
+                <input type="date" aria-label="Novo vencimento" [value]="novoVencimento()" (change)="novoVencimento.set(texto($event))" />
+                <button class="btn btn--azul btn--sm" type="button" [disabled]="ocupado() || !novoVencimento()" (click)="salvarVencimento(p)">Salvar</button>
+                <button class="link" type="button" (click)="editandoVencimento.set(null)">Cancelar</button>
+              </span>
+            } @else {
+              <span>
+                vence {{ p.vencimento | date: 'dd/MM/yy' }}
+                @if (s !== 'paga') {
+                  <button class="link" type="button" aria-label="Alterar vencimento" (click)="abrirVencimento(p)">alterar</button>
+                }
+              </span>
+            }
             <span class="estado">{{ s === 'paga' ? 'Paga' : s === 'atrasada' ? 'Atrasada' : 'Em aberto' }}</span>
             @if (s === 'paga') {
+              <button class="link" type="button" (click)="recibo(p, c.inscricao)">Recibo</button>
               <button class="link" type="button" [disabled]="ocupado()" (click)="estornar(p, c.inscricao.nome)">Estornar</button>
             } @else if (pagando() === p.id) {
               <span class="baixa">

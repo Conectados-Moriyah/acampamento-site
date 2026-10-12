@@ -21,6 +21,8 @@ export interface Inscricao {
   observacao: string | null;
   forma_pagamento: 'avista' | 'carne';
   parcelas_solicitadas: number | null;
+  /** Quem paga o carnê; vazio = o próprio inscrito. */
+  pagador: string | null;
   dados: Dados;
 }
 
@@ -289,6 +291,14 @@ export class Supabase {
       p_forma: forma,
       p_data: data,
     });
+    if (error) throw error;
+  }
+
+  async alterarVencimento(parcelaId: string, vencimento: string): Promise<void> {
+    const { error } = await (await this.cliente())
+      .from('parcelas')
+      .update({ vencimento })
+      .eq('id', parcelaId);
     if (error) throw error;
   }
 

@@ -50,3 +50,5 @@ input, select {
 
 .link { justify-self: start; padding: 0; background: none; border: 0; font: inherit; color: var(--ciano); text-decoration: underline; cursor: pointer;
   &:disabled { opacity: 0.5; cursor: wait; } }
+small.pagador { display: block; margin-top: 2px; }
+span.pagador { margin-top: 6px; }

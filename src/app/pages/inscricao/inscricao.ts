@@ -115,6 +115,10 @@ export class Inscricao {
       cpf: ['', [Validators.required, cpf]],
       telefone: ['', [Validators.required, telefone]],
       email: ['', [Validators.required, Validators.email]],
+      conhecido: ['', Validators.required],
+      conhecidoTipo: [{ value: '', disabled: true }, Validators.required],
+      conhecidoNome: [{ value: '', disabled: true }, [Validators.required, nomeCompleto]],
+      conhecidoParentesco: [{ value: '', disabled: true }, Validators.required],
     }),
     saude: this.grupoSimNao(this.perguntasSaude, { outrasInfo: [''] }),
     responsavel: this.fb.group({
@@ -173,6 +177,25 @@ export class Inscricao {
     const { pessoais, responsavel } = this.form.controls;
     pessoais.controls.nome.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => responsavel.controls.nome.updateValueAndValidity());
     pessoais.controls.telefone.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => responsavel.controls.telefone.updateValueAndValidity());
+
+    // Amigo/parente inscrito: o tipo libera o nome e, se parente, o grau de parentesco.
+    const { conhecido, conhecidoTipo, conhecidoNome, conhecidoParentesco } = pessoais.controls;
+    const liga = (c: AbstractControl, ativo: boolean) => {
+      if (ativo) {
+        c.enable({ emitEvent: false });
+      } else {
+        c.reset('', { emitEvent: false });
+        c.disable({ emitEvent: false });
+      }
+    };
+    const atualizaConhecido = () => {
+      const sim = conhecido.value === 'sim';
+      liga(conhecidoTipo, sim);
+      liga(conhecidoNome, sim && conhecidoTipo.value !== '');
+      liga(conhecidoParentesco, sim && conhecidoTipo.value === 'parente');
+    };
+    conhecido.valueChanges.pipe(takeUntilDestroyed()).subscribe(atualizaConhecido);
+    conhecidoTipo.valueChanges.pipe(takeUntilDestroyed()).subscribe(atualizaConhecido);
 
     // Quem é da Emanuel Moriyah não precisa dizer que igreja frequenta.
     const igreja = this.form.controls.igreja.controls;
@@ -285,10 +308,15 @@ export class Inscricao {
     } else {
       this.enviando.set(true);
       this.erroEnvio.set(null);
+      let redirecionando = false;
       try {
         const id = await this.supabase.enviarInscricao(this.form.getRawValue(), this.viaConvite() ? this.token : null);
         // Quem não é carnê paga no checkout da InfinitePay; se não abrir, a ficha já está gravada.
-        if (!this.carne() && (await this.pagamento.irParaCheckout(id))) return;
+        // Mantém o botão em "enviando" enquanto o navegador troca para o checkout (mesma aba).
+        if (!this.carne() && (await this.pagamento.irParaCheckout(id))) {
+          redirecionando = true;
+          return;
+        }
         this.enviada.set(true);
         this.rolarParaTopo();
       } catch (e) {
@@ -301,7 +329,7 @@ export class Inscricao {
             : 'Não foi possível enviar a ficha. Verifique sua internet e tente novamente.',
         );
       } finally {
-        this.enviando.set(false);
+        if (!redirecionando) this.enviando.set(false);
       }
     }
   }
