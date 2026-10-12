@@ -5,6 +5,8 @@
 //   INFINITEPAY_HANDLE  InfiniteTag da conta, sem o "$"
 //   SITE_URL            endereço público do site, sem barra no fim
 // SUPABASE_URL é preenchida automaticamente pelo Supabase.
+// Só no teste local: INFINITEPAY_SIMULADO=1 não chama a InfinitePay; o "checkout" volta direto para
+// /inscricao/pago como se o pagamento (Pix) tivesse sido aprovado.
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
 const API = 'https://api.checkout.infinitepay.io';
@@ -41,6 +43,10 @@ function config() {
 }
 
 const centavos = (valor: number) => Math.round(valor * 100);
+// Nunca vale no Supabase hospedado (*.supabase.co), mesmo que a variável seja cadastrada lá.
+const simulado = () =>
+  Deno.env.get('INFINITEPAY_SIMULADO') === '1' &&
+  !(Deno.env.get('SUPABASE_URL') ?? '').includes('.supabase.co');
 
 /**
  * Quanto falta pagar: valor da inscrição menos o que já entrou no caixa por ela (ex.: cupom de
@@ -97,6 +103,16 @@ export async function criarCheckout(inscricaoId: unknown): Promise<Response> {
   if (insc.email) customer['email'] = insc.email;
   if (digitos.length >= 10) customer['phone_number'] = `+55${digitos}`;
 
+  if (simulado()) {
+    const volta = new URLSearchParams({
+      order_nsu: insc.id,
+      transaction_nsu: `simulado-${crypto.randomUUID()}`,
+      slug: 'simulado',
+      capture_method: 'pix',
+    });
+    return json({ url: `${site}/inscricao/pago?${volta}` });
+  }
+
   const resposta = await post('/links', {
     handle,
     order_nsu: insc.id,
@@ -133,16 +149,16 @@ export async function confirmarPagamento(dados: Record<string, unknown>): Promis
   }
 
   const { handle, supabase } = config();
-  const conferencia = await post('/payment_check', { handle, order_nsu, transaction_nsu, slug });
-  const pago = (await conferencia.json().catch(() => null)) as {
-    success?: boolean;
-    paid?: boolean;
-    amount?: number;
-    capture_method?: string;
-  } | null;
-  if (!conferencia.ok || !pago?.success || !pago.paid) {
-    console.error('Pagamento InfinitePay não confirmado', order_nsu, conferencia.status, pago);
-    return json({ erro: 'Pagamento não confirmado.' }, 400);
+  let pago: { success?: boolean; paid?: boolean; amount?: number; capture_method?: string } | null;
+  if (simulado()) {
+    pago = { success: true, paid: true, amount: Number.MAX_SAFE_INTEGER, capture_method: 'pix' };
+  } else {
+    const conferencia = await post('/payment_check', { handle, order_nsu, transaction_nsu, slug });
+    pago = await conferencia.json().catch(() => null);
+    if (!conferencia.ok || !pago?.success || !pago.paid) {
+      console.error('Pagamento InfinitePay não confirmado', order_nsu, conferencia.status, pago);
+      return json({ erro: 'Pagamento não confirmado.' }, 400);
+    }
   }
 
   const { data: insc, error } = await supabase

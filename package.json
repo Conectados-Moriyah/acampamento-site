@@ -4,6 +4,11 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:local": "ng serve --configuration local",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "db:stop": "supabase stop",
+    "funcoes:local": "supabase functions serve --env-file supabase/functions/.env.local",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
@@ -31,6 +36,7 @@
     "@types/node": "^22.12.0",
     "jsdom": "^30.0.0",
     "prettier": "^3.8.1",
+    "supabase": "^2.120.0",
     "typescript": "~6.0.2",
     "vitest": "^5.0.0"
   }

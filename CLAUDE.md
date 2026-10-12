@@ -14,6 +14,8 @@ Package manager is npm. Angular 22, TypeScript 6, Vitest 5.
 - Single test by name: `CI=1 npx ng test --watch=false --filter="should create the app"`
 - `npm run build:pages` — build for GitHub Pages, served at the root of the custom domain https://conectadosicem.com.br (DNS on Cloudflare, records "DNS only"). Deployed by `.github/workflows/pages.yml` on push to `main`, which also copies `index.csr.html` to `404.html` so client-rendered routes survive a reload.
 
+Local test stack (needs Docker Desktop): `npm run db:start` starts a local Supabase (Postgres, auth, API; studio at http://127.0.0.1:54323) from `supabase/migrations/` + `supabase/seed.sql`; `npm run db:reset` recreates it; `npm run funcoes:local` serves the Edge Functions with `supabase/functions/.env.local` (copy `.env.local.example`; `INFINITEPAY_SIMULADO=1` fakes an approved Pix and is ignored on `*.supabase.co`); `npm run start:local` serves the site against it (`environment.local.ts`). Seed admin: `admin@teste.local` / `admin123`. New database changes go in a new file in `supabase/migrations/` and must still be run by hand in production's SQL Editor.
+
 There is no lint script. Prettier is installed (`.prettierrc`: printWidth 100, single quotes, angular parser for `*.html`); run it with `npx prettier --check .` / `--write`.
 
 The README's `ng e2e` section is stale: no e2e builder is configured in `angular.json`.
