@@ -55,6 +55,9 @@
             @else if (i.estado === 'atrasada') { Atrasada }
             @else { Em aberto }
           </span>
+          @if (i.estado !== 'paga') {
+            <a class="link" target="_blank" rel="noopener" [href]="cobrar(i.parcela, i.inscricao)">Cobrar no WhatsApp</a>
+          }
         </li>
       }
     </ul>

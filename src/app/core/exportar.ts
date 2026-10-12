@@ -1,4 +1,4 @@
-import { ETAPAS, respostaIgreja, textoValor } from './campos';
+import { ETAPAS, lerConhecidos, respostaIgreja, textoConhecidos, textoValor } from './campos';
 import { Inscricao } from './supabase';
 
 /**
@@ -19,7 +19,9 @@ export function exportarInscricoes(inscricoes: Inscricao[]): void {
     textoValor(i.forma_pagamento),
     i.observacao ?? '',
     ...campos.map((c) =>
-      textoValor(c.etapa === 'igreja' ? respostaIgreja(i.dados['igreja'], c.campo) : i.dados[c.etapa]?.[c.campo]),
+      c.campo === 'conhecidos'
+        ? textoConhecidos(lerConhecidos(i.dados['pessoais']))
+        : textoValor(c.etapa === 'igreja' ? respostaIgreja(i.dados['igreja'], c.campo) : i.dados[c.etapa]?.[c.campo]),
     ),
   ]);
 

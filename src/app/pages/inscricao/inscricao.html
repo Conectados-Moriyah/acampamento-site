@@ -169,35 +169,44 @@
               </label>
             </div>
             <div class="pergunta" role="radiogroup" aria-labelledby="p-conhecido">
-              <p id="p-conhecido">Você possui algum amigo ou parente inscrito no acampamento? *</p>
+              <p id="p-conhecido">Você possui algum amigo, parente ou namorado(a) inscrito no acampamento? *</p>
               <div class="opcoes">
                 <label class="opcao"><input type="radio" formControlName="conhecido" value="sim" /> Sim</label>
                 <label class="opcao"><input type="radio" formControlName="conhecido" value="nao" /> Não</label>
               </div>
               @if (invalido('pessoais', 'conhecido')) { <em>Escolha uma opção.</em> }
-              @if (campo('pessoais', 'conhecidoTipo').enabled) {
-                <div class="detalhe">
-                  <p>É amigo ou parente? *</p>
-                  <div class="opcoes">
-                    <label class="opcao"><input type="radio" formControlName="conhecidoTipo" value="amigo" /> Amigo</label>
-                    <label class="opcao"><input type="radio" formControlName="conhecidoTipo" value="parente" /> Parente</label>
+              <div formArrayName="conhecidos">
+                @for (item of conhecidos.controls; track item; let i = $index) {
+                  <div class="detalhe conhecido" [formGroupName]="i">
+                    <div class="conhecido__topo">
+                      <p>{{ i + 1 }}ª pessoa: é amigo, parente ou namorado(a)? *</p>
+                      <button class="remover" type="button" (click)="removerConhecido(i)">Remover</button>
+                    </div>
+                    <div class="opcoes">
+                      <label class="opcao"><input type="radio" formControlName="tipo" value="amigo" /> Amigo</label>
+                      <label class="opcao"><input type="radio" formControlName="tipo" value="parente" /> Parente</label>
+                      <label class="opcao"><input type="radio" formControlName="tipo" value="namorado" /> Namorado(a)</label>
+                    </div>
+                    @if (invalidoConhecido(i, 'tipo')) { <em>Escolha uma opção.</em> }
+                    <label class="detalhe">
+                      Nome completo *
+                      <input formControlName="nome" [class.erro]="invalidoConhecido(i, 'nome')" />
+                      @if (invalidoConhecido(i, 'nome')) {
+                        <em>{{ item.get('nome')?.hasError('required') ? 'Campo obrigatório.' : 'Informe nome e sobrenome, apenas com letras.' }}</em>
+                      }
+                    </label>
+                    @if (item.get('parentesco')?.enabled) {
+                      <label class="detalhe">
+                        Grau de parentesco *
+                        <input formControlName="parentesco" placeholder="Ex.: irmão, primo, tia" [class.erro]="invalidoConhecido(i, 'parentesco')" />
+                        @if (invalidoConhecido(i, 'parentesco')) { <em>Campo obrigatório.</em> }
+                      </label>
+                    }
                   </div>
-                  @if (invalido('pessoais', 'conhecidoTipo')) { <em>Escolha uma opção.</em> }
-                </div>
-              }
-              @if (campo('pessoais', 'conhecidoNome').enabled) {
-                <label class="detalhe">
-                  Nome completo do {{ campo('pessoais', 'conhecidoTipo').value }} *
-                  <input formControlName="conhecidoNome" [class.erro]="invalido('pessoais', 'conhecidoNome')" />
-                  @if (invalido('pessoais', 'conhecidoNome')) { <em>{{ erro('pessoais', 'conhecidoNome') }}</em> }
-                </label>
-              }
-              @if (campo('pessoais', 'conhecidoParentesco').enabled) {
-                <label class="detalhe">
-                  Grau de parentesco *
-                  <input formControlName="conhecidoParentesco" placeholder="Ex.: irmão, primo, tia" [class.erro]="invalido('pessoais', 'conhecidoParentesco')" />
-                  @if (invalido('pessoais', 'conhecidoParentesco')) { <em>{{ erro('pessoais', 'conhecidoParentesco') }}</em> }
-                </label>
+                }
+              </div>
+              @if (campo('pessoais', 'conhecido').value === 'sim') {
+                <button class="adicionar" type="button" (click)="adicionarConhecido()">+ Adicionar outra pessoa</button>
               }
             </div>
           </fieldset>

@@ -63,36 +63,59 @@
                   <option value="masculino">Masculino</option>
                   <option value="feminino">Feminino</option>
                 </select>
-              } @else if (c[0] === 'conhecidoTipo') {
-                <select [formControlName]="c[0]">
-                  <option value="">—</option>
-                  <option value="amigo">Amigo</option>
-                  <option value="parente">Parente</option>
-                </select>
-              } @else if (c[0] === 'conhecidoNome') {
-                <!-- Sugere os inscritos, mas aceita texto livre (ex.: dois nomes). -->
-                <span class="sugestoes">
-                  <input
-                    [formControlName]="c[0]"
-                    autocomplete="off"
-                    (focus)="busca.set(''); sugerindo.set(true)"
-                    (input)="busca.set(texto($event))"
-                    (blur)="sugerindo.set(false)"
-                  />
-                  @if (sugerindo() && sugestoes().length) {
-                    <ul role="listbox">
-                      @for (nome of sugestoes(); track nome) {
-                        <li role="option" (mousedown)="$event.preventDefault(); escolherConhecido(etapa.id, nome)">{{ nome }}</li>
-                      }
-                    </ul>
-                  }
-                </span>
               } @else {
                 <input [formControlName]="c[0]" />
               }
             </label>
           }
         </div>
+        @if (etapa.id === 'pessoais') {
+          <div class="conhecidos">
+            <p>Amigos, parentes e namorado(a) inscritos</p>
+            @for (item of conhecidos.controls; track item; let i = $index) {
+              <div class="conhecido" [formGroup]="item">
+                <select aria-label="Tipo" formControlName="tipo">
+                  <option value="">—</option>
+                  <option value="amigo">Amigo</option>
+                  <option value="parente">Parente</option>
+                  <option value="namorado">Namorado(a)</option>
+                </select>
+                <!-- Sugere os inscritos, mas aceita texto livre. -->
+                <span class="sugestoes">
+                  <input
+                    aria-label="Nome"
+                    placeholder="Nome"
+                    formControlName="nome"
+                    autocomplete="off"
+                    (focus)="busca.set(''); sugerindo.set(i)"
+                    (input)="busca.set(texto($event))"
+                    (blur)="sugerindo.set(null)"
+                  />
+                  @if (sugerindo() === i && sugestoes().length) {
+                    <ul role="listbox">
+                      @for (nome of sugestoes(); track nome) {
+                        <li role="option" (mousedown)="$event.preventDefault(); escolherConhecido(i, nome)">{{ nome }}</li>
+                      }
+                    </ul>
+                  }
+                </span>
+                @if (item.controls.tipo.value === 'parente') {
+                  <input aria-label="Grau de parentesco" placeholder="Grau (ex.: irmã)" formControlName="parentesco" />
+                } @else {
+                  <span></span>
+                }
+                @if (!somenteLeitura()) {
+                  <button class="remover" type="button" aria-label="Remover" (click)="conhecidos.removeAt(i)">×</button>
+                }
+              </div>
+            } @empty {
+              <small>Nenhum.</small>
+            }
+            @if (!somenteLeitura()) {
+              <button class="adicionar" type="button" (click)="adicionarConhecido()">+ Adicionar pessoa</button>
+            }
+          </div>
+        }
       </fieldset>
     }
 

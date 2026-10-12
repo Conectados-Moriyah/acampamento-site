@@ -39,3 +39,12 @@ textarea { height: auto; resize: vertical; }
     &:hover { background: var(--ciano); }
   }
 }
+
+.conhecidos {
+  display: grid; gap: 8px; margin-top: 12px; font-size: 0.85rem; color: var(--texto-claro);
+  p { margin: 0; }
+}
+.conhecido { display: grid; grid-template-columns: 130px 1fr 150px 28px; gap: 8px; align-items: start;
+  @media (max-width: 560px) { grid-template-columns: 1fr 28px; .sugestoes { grid-column: 1 / -1; } } }
+.remover { height: 40px; background: none; border: 0; font-size: 1.4rem; color: var(--laranja); cursor: pointer; }
+.adicionar { justify-self: start; padding: 0; background: none; border: 0; font: inherit; color: var(--ciano); text-decoration: underline; cursor: pointer; }
