@@ -10,11 +10,12 @@ import { CaixaPage } from '../caixa/caixa';
 import { CuponsPage } from '../cupons/cupons';
 import { CarnesPage } from '../carnes/carnes';
 import { ConvitesPage } from '../convites/convites';
+import { ReceberPage } from '../receber/receber';
 
-type Aba = 'lista' | 'resumo' | 'lotes' | 'carnes' | 'caixa' | 'cupons';
+type Aba = 'lista' | 'resumo' | 'lotes' | 'carnes' | 'receber' | 'caixa' | 'cupons';
 
 @Component({
-  imports: [CurrencyPipe, DatePipe, EditarInscricao, Resumo, Lotes, CaixaPage, CuponsPage, CarnesPage, ConvitesPage],
+  imports: [CurrencyPipe, DatePipe, EditarInscricao, Resumo, Lotes, CaixaPage, CuponsPage, CarnesPage, ConvitesPage, ReceberPage],
   selector: 'app-admin-inscricoes',
   styleUrl: '../admin.scss',
   templateUrl: './inscricoes.html',
@@ -28,6 +29,7 @@ export class AdminInscricoes {
     { id: 'resumo', label: 'Resumo' },
     { id: 'lotes', label: 'Lotes' },
     { id: 'carnes', label: 'Carnês' },
+    { id: 'receber', label: 'A receber' },
     { id: 'caixa', label: 'Caixa' },
     { id: 'cupons', label: 'Cupons' },
   ];

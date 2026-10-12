@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, output, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ETAPAS, textoValor } from '../../../core/campos';
 import { Dados, Inscricao, Supabase } from '../../../core/supabase';
@@ -6,7 +6,7 @@ import { Dados, Inscricao, Supabase } from '../../../core/supabase';
 /** Campos da ficha respondidos com sim/não (viram um select no editor). */
 const SIM_NAO = new Set([
   'doenca', 'crises', 'restricao', 'alergia', 'medicamento', 'acompanhamento',
-  'emanuel', 'frequenta', 'retiro', 'ministerio', 'batizado', 'autoriza',
+  'emanuel', 'frequenta', 'retiro', 'ministerio', 'batizado', 'autoriza', 'conhecido',
 ]);
 
 @Component({
@@ -23,6 +23,32 @@ export class EditarInscricao implements OnInit {
   readonly inscricao = input.required<Inscricao>();
   /** Modo "visualizar": mostra todos os dados, sem permitir alteração. */
   readonly somenteLeitura = input(false);
+  /** Para sugerir o nome do amigo/parente entre os inscritos. */
+  readonly inscricoes = input<Inscricao[]>([]);
+  protected readonly outrosInscritos = computed(() =>
+    this.inscricoes()
+      .filter((i) => i.status !== 'cancelada' && i.id !== this.inscricao().id)
+      .map((i) => i.nome)
+      .filter((nome, idx, lista) => lista.indexOf(nome) === idx)
+      .sort((a, b) => a.localeCompare(b)),
+  );
+  protected readonly sugerindo = signal(false);
+  protected readonly busca = signal('');
+  protected readonly sugestoes = computed(() => {
+    const sem = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const b = sem(this.busca().trim());
+    return this.outrosInscritos().filter((n) => !b || sem(n).includes(b));
+  });
+
+  protected escolherConhecido(etapa: string, nome: string): void {
+    this.grupo(etapa).controls['conhecidoNome'].setValue(nome);
+    this.busca.set(nome);
+    this.sugerindo.set(false);
+  }
+
+  protected texto(evento: Event): string {
+    return (evento.target as HTMLInputElement).value;
+  }
   readonly fechar = output();
   readonly salvo = output();
 
@@ -49,7 +75,12 @@ export class EditarInscricao implements OnInit {
     for (const etapa of this.etapas) {
       const grupo = new FormGroup<Record<string, FormControl<string>>>({});
       for (const campo of Object.keys(etapa.campos)) {
-        grupo.addControl(campo, this.fb.control(i.dados[etapa.id]?.[campo] ?? ''));
+        let valor = i.dados[etapa.id]?.[campo] ?? '';
+        // Edições antigas gravaram "Sim"/"Parente" à mão; as listas usam o valor da ficha ("sim"/"parente").
+        if ((campo === 'conhecido' || campo === 'conhecidoTipo') && typeof valor === 'string') {
+          valor = valor.trim().toLowerCase().replace('não', 'nao');
+        }
+        grupo.addControl(campo, this.fb.control(valor));
       }
       this.dados.addControl(etapa.id, grupo);
     }

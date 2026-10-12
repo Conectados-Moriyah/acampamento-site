@@ -63,6 +63,30 @@
                   <option value="masculino">Masculino</option>
                   <option value="feminino">Feminino</option>
                 </select>
+              } @else if (c[0] === 'conhecidoTipo') {
+                <select [formControlName]="c[0]">
+                  <option value="">—</option>
+                  <option value="amigo">Amigo</option>
+                  <option value="parente">Parente</option>
+                </select>
+              } @else if (c[0] === 'conhecidoNome') {
+                <!-- Sugere os inscritos, mas aceita texto livre (ex.: dois nomes). -->
+                <span class="sugestoes">
+                  <input
+                    [formControlName]="c[0]"
+                    autocomplete="off"
+                    (focus)="busca.set(''); sugerindo.set(true)"
+                    (input)="busca.set(texto($event))"
+                    (blur)="sugerindo.set(false)"
+                  />
+                  @if (sugerindo() && sugestoes().length) {
+                    <ul role="listbox">
+                      @for (nome of sugestoes(); track nome) {
+                        <li role="option" (mousedown)="$event.preventDefault(); escolherConhecido(etapa.id, nome)">{{ nome }}</li>
+                      }
+                    </ul>
+                  }
+                </span>
               } @else {
                 <input [formControlName]="c[0]" />
               }

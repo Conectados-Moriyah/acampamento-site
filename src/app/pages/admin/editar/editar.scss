@@ -27,3 +27,15 @@ textarea { height: auto; resize: vertical; }
 
 .erro { color: var(--laranja); }
 .acoes { display: flex; justify-content: flex-end; gap: 12px; }
+
+.sugestoes {
+  position: relative; display: block;
+  ul {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 2; max-height: 220px; overflow-y: auto;
+    margin: 0; padding: 0; list-style: none; background: var(--branco); border: 2px solid var(--azul-500); border-top: 0;
+  }
+  li {
+    padding: 8px 10px; font-size: 0.95rem; color: var(--azul-900); cursor: pointer;
+    &:hover { background: var(--ciano); }
+  }
+}

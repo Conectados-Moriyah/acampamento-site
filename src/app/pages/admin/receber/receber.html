@@ -1,0 +1,64 @@
+@let t = totais();
+<div class="filtros">
+  <label>De
+    <input type="date" [value]="de()" (change)="de.set(texto($event))" />
+  </label>
+  <label>Até
+    <input type="date" [value]="ate()" (change)="ate.set(texto($event))" />
+  </label>
+  <label>Situação
+    <select [value]="situacao()" (change)="situacao.set($any(texto($event)))">
+      <option value="abertas">A receber (em aberto)</option>
+      <option value="atrasadas">Atrasadas</option>
+      <option value="pagas">Recebidas</option>
+      <option value="todas">Todas</option>
+    </select>
+  </label>
+  <label>Pagador
+    <select [value]="pagador()" (change)="pagador.set(texto($event))">
+      <option value="">Todos</option>
+      @for (p of pagadores(); track p.valor) {
+        <option [value]="p.valor">{{ p.nome }}</option>
+      }
+    </select>
+  </label>
+  <div class="atalhos">
+    <button class="link" type="button" (click)="periodo('hoje')">Hoje</button>
+    <button class="link" type="button" (click)="periodo('semana')">Próximos 7 dias</button>
+    <button class="link" type="button" (click)="periodo('mes')">Este mês</button>
+    <button class="link" type="button" (click)="periodo('tudo')">Tudo</button>
+  </div>
+</div>
+
+<div class="totais">
+  <div><strong>{{ t.qtd }}</strong> parcelas no período</div>
+  <div><strong>{{ t.aReceber | currency: 'BRL' }}</strong> a receber</div>
+  <div class="alerta"><strong>{{ t.atrasado | currency: 'BRL' }}</strong> atrasado</div>
+  <div><strong>{{ t.recebido | currency: 'BRL' }}</strong> recebido</div>
+</div>
+
+@for (d of dias(); track d.dia) {
+  <section class="dia" [class.dia--hoje]="d.dia === hoje">
+    <header>
+      <h3>{{ d.dia | date: 'EEEE, dd/MM/yyyy' }}</h3>
+      <strong>{{ d.total | currency: 'BRL' }}</strong>
+    </header>
+    <ul>
+      @for (i of d.itens; track i.parcela.id) {
+        <li [attr.data-situacao]="i.estado">
+          <span class="nome">{{ i.inscricao.nome }}</span>
+          <small>{{ i.inscricao.pagador ? 'Pagador: ' + i.inscricao.pagador + ' · ' : '' }}{{ i.inscricao.telefone }}</small>
+          <span>{{ i.parcela.numero }}/{{ i.parcela.total }}</span>
+          <span>{{ i.parcela.valor | currency: 'BRL' }}</span>
+          <span class="estado">
+            @if (i.estado === 'paga') { Recebida{{ i.pagoEm ? ' em ' + (i.pagoEm | date: 'dd/MM') : '' }} }
+            @else if (i.estado === 'atrasada') { Atrasada }
+            @else { Em aberto }
+          </span>
+        </li>
+      }
+    </ul>
+  </section>
+} @empty {
+  <p class="nota">Nenhuma parcela nesse período.</p>
+}
