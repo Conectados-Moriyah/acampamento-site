@@ -1,6 +1,8 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormaPagamento, Inscricao, Movimento, Parcela, Supabase } from '../../../core/supabase';
+import { mascaras } from '../../inscricao/validadores';
+import { linkWhatsapp, telefoneCobranca, textoCobranca, textoRecibo } from '../../../core/whatsapp';
 
 type Situacao = 'paga' | 'atrasada' | 'aberta';
 type Filtro = '' | 'atrasados' | 'em-dia' | 'quitados';
@@ -31,6 +33,9 @@ export class CarnesPage {
   protected readonly pagando = signal<string | null>(null);
   protected readonly forma = signal<FormaPagamento>('pix');
   protected readonly dataPagamento = signal(hoje());
+  protected readonly comprovante = signal<File | null>(null);
+  /** Parcela que acabou de receber baixa: destaca o envio do recibo. */
+  protected readonly recemPaga = signal<string | null>(null);
   /** Parcela com o vencimento em edição. */
   protected readonly editandoVencimento = signal<string | null>(null);
   protected readonly novoVencimento = signal('');
@@ -43,6 +48,8 @@ export class CarnesPage {
   /** Inscrição com o pagador em edição. */
   protected readonly editandoPagador = signal<string | null>(null);
   protected readonly novoPagador = signal('');
+  protected readonly pagadorTelefone = signal('');
+  protected readonly novoPagadorTelefone = signal('');
   protected readonly ocupado = signal(false);
 
   protected situacao(p: Parcela): Situacao {
@@ -113,18 +120,23 @@ export class CarnesPage {
     this.primeiroVencimento.set(proximoDia10());
     this.novoInscrito.set('');
     this.pagador.set(inscricao !== 'nova' ? (inscricao.pagador ?? '') : '');
+    this.pagadorTelefone.set(inscricao !== 'nova' ? (inscricao.pagador_telefone ?? '') : '');
   }
 
   /** Troca quem paga o carnê sem mexer nas parcelas. */
   protected abrirPagador(i: Inscricao): void {
     this.editandoPagador.set(i.id);
     this.novoPagador.set(i.pagador ?? '');
+    this.novoPagadorTelefone.set(i.pagador_telefone ?? '');
   }
 
   protected async salvarPagador(i: Inscricao): Promise<void> {
     this.ocupado.set(true);
     try {
-      await this.supabase.atualizarInscricao(i.id, { pagador: this.novoPagador().trim() || null });
+      await this.supabase.atualizarInscricao(i.id, {
+        pagador: this.novoPagador().trim() || null,
+        pagador_telefone: this.novoPagadorTelefone().trim() || null,
+      });
       this.editandoPagador.set(null);
       this.alterado.emit();
     } catch {
@@ -140,7 +152,10 @@ export class CarnesPage {
     this.ocupado.set(true);
     try {
       await this.supabase.gerarCarne(id, this.totalParcelas(), this.primeiroVencimento());
-      await this.supabase.atualizarInscricao(id, { pagador: this.pagador().trim() || null });
+      await this.supabase.atualizarInscricao(id, {
+        pagador: this.pagador().trim() || null,
+        pagador_telefone: this.pagadorTelefone().trim() || null,
+      });
       this.gerando.set(null);
       this.alterado.emit();
     } catch (e) {
@@ -161,19 +176,81 @@ export class CarnesPage {
     this.pagando.set(p.id);
     this.forma.set('pix');
     this.dataPagamento.set(hoje());
+    this.comprovante.set(null);
   }
 
   protected async pagar(p: Parcela): Promise<void> {
     this.ocupado.set(true);
     try {
       await this.supabase.pagarParcela(p.id, this.forma(), this.dataPagamento());
+      const arquivo = this.comprovante();
+      if (arquivo) {
+        try {
+          await this.supabase.anexarComprovante(p.id, arquivo);
+        } catch {
+          alert('A baixa foi feita, mas o comprovante não foi enviado. Use "Anexar comprovante" na parcela.');
+        }
+      }
       this.pagando.set(null);
+      this.recemPaga.set(p.id);
       this.alterado.emit();
     } catch (e) {
       alert(mensagem(e).includes('PARCELA_JA_PAGA') ? 'Essa parcela já foi paga.' : 'Não foi possível dar baixa.');
     } finally {
       this.ocupado.set(false);
     }
+  }
+
+  /** Aplica a máscara de telefone no próprio campo e devolve o valor. */
+  protected mascaraTelefone(evento: Event): string {
+    const el = evento.target as HTMLInputElement;
+    el.value = mascaras.telefone(el.value);
+    return el.value;
+  }
+
+  protected escolherArquivo(evento: Event): File | null {
+    return (evento.target as HTMLInputElement).files?.[0] ?? null;
+  }
+
+  /** Anexa (ou troca) o comprovante de uma parcela já paga. */
+  protected async anexar(p: Parcela, evento: Event): Promise<void> {
+    const arquivo = this.escolherArquivo(evento);
+    if (!arquivo) return;
+    this.ocupado.set(true);
+    try {
+      await this.supabase.anexarComprovante(p.id, arquivo);
+      this.alterado.emit();
+    } catch {
+      alert('Não foi possível enviar o comprovante.');
+    } finally {
+      this.ocupado.set(false);
+    }
+  }
+
+  protected async verComprovante(p: Parcela): Promise<void> {
+    if (!p.comprovante) return;
+    // Abre a aba antes do await: depois dele o navegador bloqueia como pop-up.
+    const aba = window.open('', '_blank');
+    try {
+      const url = await this.supabase.linkComprovante(p.comprovante);
+      if (aba) aba.location.href = url;
+      else window.location.href = url;
+    } catch {
+      aba?.close();
+      alert('Não foi possível abrir o comprovante.');
+    }
+  }
+
+  protected cobrar(p: Parcela, i: Inscricao): string {
+    return linkWhatsapp(telefoneCobranca(i), textoCobranca(p, i));
+  }
+
+  protected reciboWhatsapp(p: Parcela, i: Inscricao): string {
+    const doCarne = this.parcelas().filter((x) => x.inscricao_id === i.id);
+    const total = doCarne.reduce((t, x) => t + Number(x.valor), 0);
+    const pago = doCarne.filter((x) => x.movimento_id).reduce((t, x) => t + Number(x.valor), 0);
+    const m = this.movimentos().find((x) => x.id === p.movimento_id);
+    return linkWhatsapp(telefoneCobranca(i), textoRecibo(p, i, m?.data ?? null, pago, total));
   }
 
   protected abrirVencimento(p: Parcela): void {

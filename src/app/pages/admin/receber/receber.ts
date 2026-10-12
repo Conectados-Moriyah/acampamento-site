@@ -1,6 +1,7 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Inscricao, Movimento, Parcela } from '../../../core/supabase';
+import { linkWhatsapp, telefoneCobranca, textoCobranca } from '../../../core/whatsapp';
 
 type Situacao = 'todas' | 'abertas' | 'atrasadas' | 'pagas';
 
@@ -132,6 +133,10 @@ export class ReceberPage {
       this.de.set('');
       this.ate.set('');
     }
+  }
+
+  protected cobrar(p: Parcela, i: Inscricao): string {
+    return linkWhatsapp(telefoneCobranca(i), textoCobranca(p, i));
   }
 
   protected texto(evento: Event): string {

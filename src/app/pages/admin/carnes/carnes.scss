@@ -52,3 +52,5 @@ input, select {
   &:disabled { opacity: 0.5; cursor: wait; } }
 small.pagador { display: block; margin-top: 2px; }
 span.pagador { margin-top: 6px; }
+label.anexo { display: inline; font-size: inherit; color: var(--ciano); input { display: none; } }
+.destaque { font-weight: 700; color: var(--laranja); }
