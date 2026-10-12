@@ -64,6 +64,10 @@ em { color: #c2255c; font-style: normal; font-size: 0.8rem; font-weight: 500; }
   &:has(input:focus-visible) { outline: 3px solid var(--laranja); outline-offset: 2px; }
 }
 .detalhe { margin-top: 12px; animation: aparecer 0.35s var(--suave); }
+.conhecido { padding: 10px 12px; border: 1px dashed var(--azul-500); p { margin: 0; } }
+.conhecido__topo { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.remover, .adicionar { padding: 0; background: none; border: 0; font: inherit; font-size: 0.85rem; font-weight: 600; color: var(--azul-500); text-decoration: underline; cursor: pointer; }
+.adicionar { margin-top: 12px; }
 
 .aviso { background: #fff1e0; border-left: 4px solid var(--laranja); padding: 10px 12px; font-size: 0.85rem; margin: 0; color: var(--texto);
   &--erro { background: #ffe5e5; border-left-color: #d12f2f; } }

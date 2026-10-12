@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
-import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ETAPAS, textoValor } from '../../../core/campos';
+import { FormArray, FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Conhecido, ETAPAS, lerConhecidos, textoValor } from '../../../core/campos';
 import { Dados, Inscricao, Supabase } from '../../../core/supabase';
 
 /** Campos da ficha respondidos com sim/não (viram um select no editor). */
@@ -32,7 +32,8 @@ export class EditarInscricao implements OnInit {
       .filter((nome, idx, lista) => lista.indexOf(nome) === idx)
       .sort((a, b) => a.localeCompare(b)),
   );
-  protected readonly sugerindo = signal(false);
+  /** Linha da lista de conhecidos com as sugestões abertas. */
+  protected readonly sugerindo = signal<number | null>(null);
   protected readonly busca = signal('');
   protected readonly sugestoes = computed(() => {
     const sem = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -40,10 +41,18 @@ export class EditarInscricao implements OnInit {
     return this.outrosInscritos().filter((n) => !b || sem(n).includes(b));
   });
 
-  protected escolherConhecido(etapa: string, nome: string): void {
-    this.grupo(etapa).controls['conhecidoNome'].setValue(nome);
-    this.busca.set(nome);
-    this.sugerindo.set(false);
+  /** Amigos/parentes/namorado(a) inscritos (`dados.pessoais.conhecidos`). */
+  protected readonly conhecidos = new FormArray<FormGroup<Record<keyof Conhecido, FormControl<string>>>>([]);
+
+  protected adicionarConhecido(c: Conhecido = { tipo: '', nome: '', parentesco: '' }): void {
+    this.conhecidos.push(
+      this.fb.group({ tipo: c.tipo as string, nome: c.nome, parentesco: c.parentesco }),
+    );
+  }
+
+  protected escolherConhecido(i: number, nome: string): void {
+    this.conhecidos.at(i).controls.nome.setValue(nome);
+    this.sugerindo.set(null);
   }
 
   protected texto(evento: Event): string {
@@ -75,9 +84,10 @@ export class EditarInscricao implements OnInit {
     for (const etapa of this.etapas) {
       const grupo = new FormGroup<Record<string, FormControl<string>>>({});
       for (const campo of Object.keys(etapa.campos)) {
+        if (campo === 'conhecidos') continue; // lista própria, abaixo
         let valor = i.dados[etapa.id]?.[campo] ?? '';
-        // Edições antigas gravaram "Sim"/"Parente" à mão; as listas usam o valor da ficha ("sim"/"parente").
-        if ((campo === 'conhecido' || campo === 'conhecidoTipo') && typeof valor === 'string') {
+        // Edições antigas gravaram "Sim"/"Não" à mão; o select usa o valor da ficha ("sim"/"nao").
+        if (campo === 'conhecido' && typeof valor === 'string') {
           valor = valor.trim().toLowerCase().replace('não', 'nao');
         }
         grupo.addControl(campo, this.fb.control(valor));
@@ -91,9 +101,11 @@ export class EditarInscricao implements OnInit {
       valor: i.valor === null ? '' : String(i.valor),
       observacao: i.observacao ?? '',
     });
+    lerConhecidos(i.dados['pessoais']).forEach((c) => this.adicionarConhecido(c));
     if (this.somenteLeitura()) {
       this.controle.disable();
       this.dados.disable();
+      this.conhecidos.disable();
     }
   }
 
@@ -101,6 +113,16 @@ export class EditarInscricao implements OnInit {
     if (this.somenteLeitura()) return;
     const dados = this.dados.getRawValue() as Dados;
     const p = dados['pessoais'];
+    // A lista substitui os campos soltos das fichas antigas.
+    const conhecidos = this.conhecidos
+      .getRawValue()
+      .map((c) => ({ ...c, nome: c.nome.trim(), parentesco: c.tipo === 'parente' ? c.parentesco.trim() : '' }))
+      .filter((c) => c.nome);
+    delete p['conhecidoTipo'];
+    delete p['conhecidoNome'];
+    delete p['conhecidoParentesco'];
+    (p as Record<string, unknown>)['conhecidos'] = conhecidos;
+    if (conhecidos.length) p['conhecido'] = 'sim';
     if (!p['nome'].trim() || !p['telefone'].trim()) {
       this.erro.set('Nome e telefone são obrigatórios.');
       return;
@@ -145,6 +167,6 @@ export class EditarInscricao implements OnInit {
   }
 
   protected campos(etapa: (typeof ETAPAS)[number]): [string, string][] {
-    return Object.entries(etapa.campos);
+    return Object.entries(etapa.campos).filter(([campo]) => campo !== 'conhecidos');
   }
 }

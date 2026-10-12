@@ -23,6 +23,8 @@ export interface Inscricao {
   parcelas_solicitadas: number | null;
   /** Quem paga o carnê; vazio = o próprio inscrito. */
   pagador: string | null;
+  /** WhatsApp do pagador; vazio = o telefone da inscrição. */
+  pagador_telefone: string | null;
   dados: Dados;
 }
 
@@ -48,6 +50,8 @@ export interface Parcela {
   valor: number;
   vencimento: string;
   movimento_id: string | null;
+  /** Caminho do comprovante no bucket `comprovantes`. */
+  comprovante: string | null;
 }
 
 export interface Lote {
@@ -134,7 +138,7 @@ export class Supabase {
   /** Ficha pública. Tipo, status, lote e valor são definidos pelo banco (ver supabase/fase1.sql). */
   /** `dados` pode ter booleanos (checkboxes de declaração e consentimento). */
   async enviarInscricao(
-    dados: Record<string, Record<string, string | boolean>>,
+    dados: Record<string, Record<string, unknown>>,
     convite: string | null = null,
   ): Promise<string> {
     const p = dados['pessoais'];
@@ -292,6 +296,26 @@ export class Supabase {
       p_data: data,
     });
     if (error) throw error;
+  }
+
+  /** Guarda o comprovante no Storage e liga à parcela. */
+  async anexarComprovante(parcelaId: string, arquivo: File): Promise<void> {
+    const cliente = await this.cliente();
+    const extensao = arquivo.name.split('.').pop()?.toLowerCase() || 'bin';
+    const caminho = `${parcelaId}/${Date.now()}.${extensao}`;
+    const envio = await cliente.storage.from('comprovantes').upload(caminho, arquivo, { contentType: arquivo.type });
+    if (envio.error) throw envio.error;
+    const { error } = await cliente.from('parcelas').update({ comprovante: caminho }).eq('id', parcelaId);
+    if (error) throw error;
+  }
+
+  /** Link temporário (10 min) para abrir o comprovante. */
+  async linkComprovante(caminho: string): Promise<string> {
+    const { data, error } = await (await this.cliente()).storage
+      .from('comprovantes')
+      .createSignedUrl(caminho, 600);
+    if (error) throw error;
+    return data.signedUrl;
   }
 
   async alterarVencimento(parcelaId: string, vencimento: string): Promise<void> {

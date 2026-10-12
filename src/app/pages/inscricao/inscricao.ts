@@ -2,6 +2,7 @@ import { Component, DestroyRef, afterNextRender, computed, inject, signal } from
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
+  FormArray,
   FormControl,
   FormGroup,
   NonNullableFormBuilder,
@@ -116,9 +117,7 @@ export class Inscricao {
       telefone: ['', [Validators.required, telefone]],
       email: ['', [Validators.required, Validators.email]],
       conhecido: ['', Validators.required],
-      conhecidoTipo: [{ value: '', disabled: true }, Validators.required],
-      conhecidoNome: [{ value: '', disabled: true }, [Validators.required, nomeCompleto]],
-      conhecidoParentesco: [{ value: '', disabled: true }, Validators.required],
+      conhecidos: this.fb.array<FormGroup>([]),
     }),
     saude: this.grupoSimNao(this.perguntasSaude, { outrasInfo: [''] }),
     responsavel: this.fb.group({
@@ -178,24 +177,12 @@ export class Inscricao {
     pessoais.controls.nome.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => responsavel.controls.nome.updateValueAndValidity());
     pessoais.controls.telefone.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => responsavel.controls.telefone.updateValueAndValidity());
 
-    // Amigo/parente inscrito: o tipo libera o nome e, se parente, o grau de parentesco.
-    const { conhecido, conhecidoTipo, conhecidoNome, conhecidoParentesco } = pessoais.controls;
-    const liga = (c: AbstractControl, ativo: boolean) => {
-      if (ativo) {
-        c.enable({ emitEvent: false });
-      } else {
-        c.reset('', { emitEvent: false });
-        c.disable({ emitEvent: false });
-      }
-    };
-    const atualizaConhecido = () => {
-      const sim = conhecido.value === 'sim';
-      liga(conhecidoTipo, sim);
-      liga(conhecidoNome, sim && conhecidoTipo.value !== '');
-      liga(conhecidoParentesco, sim && conhecidoTipo.value === 'parente');
-    };
-    conhecido.valueChanges.pipe(takeUntilDestroyed()).subscribe(atualizaConhecido);
-    conhecidoTipo.valueChanges.pipe(takeUntilDestroyed()).subscribe(atualizaConhecido);
+    // Amigo/parente/namorado(a) inscrito: "Sim" abre a lista com uma pessoa; "Não" esvazia.
+    pessoais.controls.conhecido.valueChanges.pipe(takeUntilDestroyed()).subscribe((v) => {
+      const lista = this.conhecidos;
+      if (v === 'sim' && lista.length === 0) this.adicionarConhecido();
+      if (v !== 'sim') lista.clear();
+    });
 
     // Quem é da Emanuel Moriyah não precisa dizer que igreja frequenta.
     const igreja = this.form.controls.igreja.controls;
@@ -245,6 +232,39 @@ export class Inscricao {
       grupo.addControl(nome, this.fb.control(valor));
     }
     return grupo;
+  }
+
+  protected get conhecidos(): FormArray<FormGroup> {
+    return this.form.controls.pessoais.controls.conhecidos;
+  }
+
+  /** Uma pessoa conhecida: o grau de parentesco só existe (e é obrigatório) para parente. */
+  protected adicionarConhecido(): void {
+    const item = this.fb.group({
+      tipo: ['', Validators.required],
+      nome: ['', [Validators.required, nomeCompleto]],
+      parentesco: [{ value: '', disabled: true }, Validators.required],
+    });
+    item.controls.tipo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((t) => {
+      const grau = item.controls.parentesco;
+      if (t === 'parente') {
+        grau.enable();
+      } else {
+        grau.reset('');
+        grau.disable();
+      }
+    });
+    this.conhecidos.push(item);
+  }
+
+  protected removerConhecido(i: number): void {
+    this.conhecidos.removeAt(i);
+    if (this.conhecidos.length === 0) this.form.controls.pessoais.controls.conhecido.setValue('nao');
+  }
+
+  protected invalidoConhecido(i: number, campo: string): boolean {
+    const c = this.conhecidos.at(i).get(campo)!;
+    return c.invalid && c.touched;
   }
 
   protected grupoAtual(): FormGroup {
