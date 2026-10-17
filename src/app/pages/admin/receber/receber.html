@@ -15,7 +15,7 @@
     </select>
   </label>
   <label>Pagador
-    <select [value]="pagador()" (change)="pagador.set(texto($event))">
+    <select [value]="pagador()" (change)="escolherPagador(texto($event))">
       <option value="">Todos</option>
       @for (p of pagadores(); track p.valor) {
         <option [value]="p.valor">{{ p.nome }}</option>
@@ -29,6 +29,53 @@
     <button class="link" type="button" (click)="periodo('tudo')">Tudo</button>
   </div>
 </div>
+
+@if (pagador()) {
+  <section class="conjunto">
+    <h3>Receber do pagador</h3>
+    @if (abertasDoPagador().length === 0) {
+      <p class="nota">Nenhuma parcela em aberto para esse pagador.</p>
+    } @else {
+      <p class="nota">Uma cobrança e uma baixa só para as parcelas marcadas, com o mesmo comprovante em todas.</p>
+      <ul>
+        @for (x of abertasDoPagador(); track x.parcela.id) {
+          <li [attr.data-situacao]="x.parcela.vencimento < hoje ? 'atrasada' : 'aberta'">
+            <label class="marca">
+              <input type="checkbox" [checked]="!desmarcadas().has(x.parcela.id)" (change)="marcar(x.parcela.id, $event)" />
+              <span class="nome">{{ x.inscricao.nome }}</span>
+            </label>
+            <span>{{ x.parcela.numero }}/{{ x.parcela.total }}</span>
+            <span>vence {{ x.parcela.vencimento | date: 'dd/MM/yy' }}</span>
+            <span>{{ x.parcela.valor | currency: 'BRL' }}</span>
+          </li>
+        }
+      </ul>
+      <div class="baixa">
+        <strong>Total: {{ totalSelecionado() | currency: 'BRL' }}</strong>
+        @if (selecionadas().length) {
+          <a class="link" target="_blank" rel="noopener" [href]="cobrarTudo()">Cobrar tudo no WhatsApp</a>
+        }
+        <select aria-label="Forma de pagamento" [value]="forma()" (change)="forma.set($any(texto($event)))">
+          <option value="pix">Pix</option>
+          <option value="dinheiro">Dinheiro</option>
+          <option value="cartao">Cartão</option>
+          <option value="outro">Outro</option>
+        </select>
+        <input type="date" aria-label="Data do pagamento" [value]="dataPagamento()" (change)="dataPagamento.set(texto($event))" />
+        <label class="link anexo">
+          {{ comprovante()?.name ?? 'Anexar comprovante' }}
+          <input type="file" accept="image/*,application/pdf" (change)="comprovante.set(escolherArquivo($event))" />
+        </label>
+        <button class="btn btn--azul btn--sm" type="button" [disabled]="ocupado() || !selecionadas().length" (click)="receberTudo()">
+          Dar baixa em {{ selecionadas().length }} parcela(s)
+        </button>
+      </div>
+    }
+    @if (reciboConjunto(); as r) {
+      <a class="link destaque" target="_blank" rel="noopener" [href]="r">Enviar recibo no WhatsApp</a>
+    }
+  </section>
+}
 
 <div class="totais">
   <div><strong>{{ t.qtd }}</strong> parcelas no período</div>

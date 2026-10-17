@@ -37,3 +37,13 @@ li {
 }
 
 .link { padding: 0; background: none; border: 0; font: inherit; color: var(--ciano); text-decoration: underline; cursor: pointer; }
+
+.conjunto {
+  padding: 12px 16px; margin-bottom: 16px; background: var(--azul-800); border-left: 4px solid var(--ciano);
+  h3 { margin: 0 0 4px; font-size: 1rem; }
+  ul { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
+  .marca { display: flex; align-items: center; gap: 8px; margin-right: auto; color: inherit; font-size: inherit; }
+  .baixa { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
+  .anexo { display: inline-block; font-size: inherit; input { display: none; } }
+  .destaque { display: inline-block; margin-top: 8px; font-weight: 600; }
+}

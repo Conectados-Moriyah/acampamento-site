@@ -1,7 +1,13 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Inscricao, Movimento, Parcela } from '../../../core/supabase';
-import { linkWhatsapp, telefoneCobranca, textoCobranca } from '../../../core/whatsapp';
+import { FormaPagamento, Inscricao, Movimento, Parcela, Supabase } from '../../../core/supabase';
+import {
+  linkWhatsapp,
+  telefoneCobranca,
+  textoCobranca,
+  textoCobrancaPagador,
+  textoReciboPagador,
+} from '../../../core/whatsapp';
 
 type Situacao = 'todas' | 'abertas' | 'atrasadas' | 'pagas';
 
@@ -28,9 +34,12 @@ const chave = (nome: string) =>
   templateUrl: './receber.html',
 })
 export class ReceberPage {
+  private readonly supabase = inject(Supabase);
+
   readonly inscricoes = input.required<Inscricao[]>();
   readonly parcelas = input.required<Parcela[]>();
   readonly movimentos = input<Movimento[]>([]);
+  readonly alterado = output();
 
   protected readonly de = signal(inicioDoMes());
   protected readonly ate = signal(fimDoMes());
@@ -56,6 +65,104 @@ export class ReceberPage {
       .map(([valor, nome]) => ({ valor, nome }))
       .sort((a, b) => a.nome.localeCompare(b.nome));
   });
+
+  /** Parcelas fora da baixa conjunta (por padrão entram todas as em aberto do pagador). */
+  protected readonly desmarcadas = signal<ReadonlySet<string>>(new Set());
+  protected readonly forma = signal<FormaPagamento>('pix');
+  protected readonly dataPagamento = signal(hoje());
+  protected readonly comprovante = signal<File | null>(null);
+  protected readonly ocupado = signal(false);
+  /** Link do recibo da última baixa conjunta, para enviar no WhatsApp. */
+  protected readonly reciboConjunto = signal<string | null>(null);
+
+  /** Todas as parcelas em aberto do pagador escolhido, de qualquer vencimento e carnê. */
+  protected readonly abertasDoPagador = computed(() => {
+    const pg = this.pagador();
+    if (!pg) return [];
+    const doPagador = new Map(
+      this.inscricoes()
+        .filter((i) => i.status !== 'cancelada' && chave(i.pagador || i.nome) === pg)
+        .map((i) => [i.id, i] as const),
+    );
+    return this.parcelas()
+      .filter((p) => !p.movimento_id && doPagador.has(p.inscricao_id))
+      .map((p) => ({ parcela: p, inscricao: doPagador.get(p.inscricao_id)! }))
+      .sort(
+        (a, b) =>
+          a.parcela.vencimento.localeCompare(b.parcela.vencimento) ||
+          a.inscricao.nome.localeCompare(b.inscricao.nome),
+      );
+  });
+
+  protected readonly selecionadas = computed(() =>
+    this.abertasDoPagador().filter((x) => !this.desmarcadas().has(x.parcela.id)),
+  );
+
+  protected readonly totalSelecionado = computed(() =>
+    this.selecionadas().reduce((t, x) => t + Number(x.parcela.valor), 0),
+  );
+
+  protected escolherPagador(valor: string): void {
+    this.pagador.set(valor);
+    this.desmarcadas.set(new Set());
+    this.comprovante.set(null);
+    this.reciboConjunto.set(null);
+  }
+
+  protected marcar(id: string, evento: Event): void {
+    const s = new Set(this.desmarcadas());
+    if ((evento.target as HTMLInputElement).checked) s.delete(id);
+    else s.add(id);
+    this.desmarcadas.set(s);
+  }
+
+  protected cobrarTudo(): string {
+    const itens = this.selecionadas();
+    return linkWhatsapp(telefoneCobranca(itens[0].inscricao), textoCobrancaPagador(itens));
+  }
+
+  /** Dá baixa em todas as parcelas marcadas e liga o mesmo comprovante a todas. */
+  protected async receberTudo(): Promise<void> {
+    const itens = this.selecionadas();
+    const total = this.totalSelecionado().toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    if (!itens.length || !confirm(`Dar baixa em ${itens.length} parcela(s), total de ${total}?`)) return;
+    this.ocupado.set(true);
+    const pagas: typeof itens = [];
+    try {
+      for (const x of itens) {
+        try {
+          await this.supabase.pagarParcela(x.parcela.id, this.forma(), this.dataPagamento());
+          pagas.push(x);
+        } catch (e) {
+          // Já paga em outra aba: segue com as demais.
+          if (!String((e as { message?: string })?.message ?? '').includes('PARCELA_JA_PAGA')) throw e;
+        }
+      }
+    } catch {
+      alert(`Não foi possível dar baixa em todas: ${pagas.length} de ${itens.length} foram baixadas.`);
+    }
+    const arquivo = this.comprovante();
+    if (arquivo && pagas.length) {
+      try {
+        await this.supabase.anexarComprovanteEmVarias(pagas.map((x) => x.parcela.id), arquivo);
+      } catch {
+        alert('A baixa foi feita, mas o comprovante não foi enviado. Anexe pela aba Carnês.');
+      }
+    }
+    if (pagas.length) {
+      this.reciboConjunto.set(
+        linkWhatsapp(telefoneCobranca(pagas[0].inscricao), textoReciboPagador(pagas, this.dataPagamento())),
+      );
+    }
+    this.comprovante.set(null);
+    this.desmarcadas.set(new Set());
+    this.ocupado.set(false);
+    this.alterado.emit();
+  }
+
+  protected escolherArquivo(evento: Event): File | null {
+    return (evento.target as HTMLInputElement).files?.[0] ?? null;
+  }
 
   private readonly lista = computed(() => {
     const nomes = new Map(

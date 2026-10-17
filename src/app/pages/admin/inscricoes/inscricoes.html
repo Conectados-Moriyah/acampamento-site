@@ -48,6 +48,12 @@
             <option value="participante">Participante</option>
             <option value="lider">Líder</option>
           </select>
+          <select [value]="filtroForma()" (change)="filtroForma.set($any(valor($event)))">
+            <option value="">Todas as formas de pagamento</option>
+            <option value="sem">Sem forma de pagamento</option>
+            <option value="avista">À vista</option>
+            <option value="carne">Carnê</option>
+          </select>
           <button class="btn btn--contorno" type="button" (click)="exportar()">Exportar Excel</button>
           <button class="btn btn--azul" type="button" [attr.aria-expanded]="linksLider()" (click)="linksLider.set(!linksLider())">
             {{ linksLider() ? 'Fechar links de líder' : '+ Inscrição de líder' }}
@@ -122,7 +128,7 @@
         <app-carnes [inscricoes]="inscricoes()" [parcelas]="parcelas()" [movimentos]="movimentos()" (alterado)="carregar()" />
       }
       @case ('receber') {
-        <app-receber [inscricoes]="inscricoes()" [parcelas]="parcelas()" [movimentos]="movimentos()" />
+        <app-receber [inscricoes]="inscricoes()" [parcelas]="parcelas()" [movimentos]="movimentos()" (alterado)="carregar()" />
       }
       @case ('caixa') {
         <app-caixa [movimentos]="movimentos()" [inscricoes]="inscricoes()" [cupons]="cupons()" (alterado)="carregar()" />

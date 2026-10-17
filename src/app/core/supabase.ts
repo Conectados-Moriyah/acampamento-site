@@ -300,12 +300,17 @@ export class Supabase {
 
   /** Guarda o comprovante no Storage e liga à parcela. */
   async anexarComprovante(parcelaId: string, arquivo: File): Promise<void> {
+    await this.anexarComprovanteEmVarias([parcelaId], arquivo);
+  }
+
+  /** Envia o comprovante uma vez só e liga o mesmo arquivo a todas as parcelas. */
+  async anexarComprovanteEmVarias(parcelaIds: string[], arquivo: File): Promise<void> {
     const cliente = await this.cliente();
     const extensao = arquivo.name.split('.').pop()?.toLowerCase() || 'bin';
-    const caminho = `${parcelaId}/${Date.now()}.${extensao}`;
+    const caminho = `${parcelaIds[0]}/${Date.now()}.${extensao}`;
     const envio = await cliente.storage.from('comprovantes').upload(caminho, arquivo, { contentType: arquivo.type });
     if (envio.error) throw envio.error;
-    const { error } = await cliente.from('parcelas').update({ comprovante: caminho }).eq('id', parcelaId);
+    const { error } = await cliente.from('parcelas').update({ comprovante: caminho }).in('id', parcelaIds);
     if (error) throw error;
   }
 

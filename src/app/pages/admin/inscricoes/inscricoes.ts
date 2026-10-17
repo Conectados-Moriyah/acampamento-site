@@ -60,6 +60,18 @@ export class AdminInscricoes {
   protected readonly busca = signal('');
   protected readonly filtroStatus = signal<StatusInscricao | ''>('');
   protected readonly filtroTipo = signal<Inscricao['tipo'] | ''>('');
+  protected readonly filtroForma = signal<'avista' | 'carne' | 'sem' | ''>('');
+
+  private readonly comCarne = computed(() => new Set(this.parcelas().map((p) => p.inscricao_id)));
+
+  /**
+   * Forma de pagamento na prática: carnê (marcado ou com parcelas), à vista (já pagou algo)
+   * ou sem forma definida (à vista por padrão, mas sem pagamento nem parcelas).
+   */
+  private formaDe(i: Inscricao): 'avista' | 'carne' | 'sem' {
+    if (i.forma_pagamento === 'carne' || this.comCarne().has(i.id)) return 'carne';
+    return (this.pagoPorInscricao().get(i.id) ?? 0) > 0 ? 'avista' : 'sem';
+  }
 
   protected readonly filtradas = computed(() => {
     const termo = this.busca().trim().toLowerCase();
@@ -67,6 +79,7 @@ export class AdminInscricoes {
       (i) =>
         (!this.filtroStatus() || i.status === this.filtroStatus()) &&
         (!this.filtroTipo() || i.tipo === this.filtroTipo()) &&
+        (!this.filtroForma() || this.formaDe(i) === this.filtroForma()) &&
         (!termo || `${i.nome} ${i.email} ${i.telefone}`.toLowerCase().includes(termo)),
     );
   });
