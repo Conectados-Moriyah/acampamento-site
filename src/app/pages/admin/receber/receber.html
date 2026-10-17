@@ -67,9 +67,17 @@
           <input type="file" accept="image/*,application/pdf" (change)="comprovante.set(escolherArquivo($event))" />
         </label>
         <button class="btn btn--azul btn--sm" type="button" [disabled]="ocupado() || !selecionadas().length" (click)="receberTudo()">
-          Dar baixa em {{ selecionadas().length }} parcela(s)
+          @if (ocupado()) { Dando baixa… }
+          @else if (confirmando()) { Confirmar baixa de {{ totalSelecionado() | currency: 'BRL' }} }
+          @else { Dar baixa em {{ selecionadas().length }} parcela(s) }
         </button>
+        @if (confirmando()) {
+          <button class="link" type="button" (click)="confirmando.set(false)">Cancelar</button>
+        }
       </div>
+    }
+    @if (resultado(); as m) {
+      <p class="resultado">{{ m }}</p>
     }
     @if (reciboConjunto(); as r) {
       <a class="link destaque" target="_blank" rel="noopener" [href]="r">Enviar recibo no WhatsApp</a>
