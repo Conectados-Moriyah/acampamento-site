@@ -48,3 +48,37 @@ export function textoRecibo(p: Parcela, i: Inscricao, pagoEm: string | null, pag
     saldo > 0 ? `Saldo restante: ${brl(saldo)}` : 'Carnê quitado! 🎉',
   ].join('\n');
 }
+
+/** Uma cobrança só com todas as parcelas em aberto de quem paga (pode juntar vários carnês). */
+export function textoCobrancaPagador(itens: { parcela: Parcela; inscricao: Inscricao }[]): string {
+  const hoje = new Date().toLocaleDateString('sv-SE');
+  const total = itens.reduce((t, x) => t + Number(x.parcela.valor), 0);
+  return [
+    `Olá, ${saudacao(itens[0].inscricao)}! Tudo bem?`,
+    'Seguem as parcelas em aberto do carnê no Conectados — Acampamento Jovem Emanuel Moriyah:',
+    '',
+    ...itens.map(
+      ({ parcela: p, inscricao: i }) =>
+        `• ${i.nome} — parcela ${p.numero}/${p.total}: ${brl(p.valor)}, vence ${data(p.vencimento)}` +
+        (p.vencimento < hoje ? ' (vencida)' : ''),
+    ),
+    '',
+    `*Total: ${brl(total)}*`,
+    '',
+    `Pix (CNPJ): ${CHAVE_PIX}`,
+    '',
+    'Pode pagar tudo num Pix só. Depois, envie o comprovante por aqui. Obrigado!',
+  ].join('\n');
+}
+
+export function textoReciboPagador(itens: { parcela: Parcela; inscricao: Inscricao }[], pagoEm: string): string {
+  const total = itens.reduce((t, x) => t + Number(x.parcela.valor), 0);
+  return [
+    `Olá, ${saudacao(itens[0].inscricao)}! Recebemos o seu pagamento, obrigado!`,
+    '',
+    `*Recibo — Conectados, Acampamento Jovem Emanuel Moriyah*`,
+    ...itens.map(({ parcela: p, inscricao: i }) => `• ${i.nome} — parcela ${p.numero}/${p.total}: ${brl(p.valor)}`),
+    `Total: ${brl(total)}`,
+    `Pago em: ${data(pagoEm)}`,
+  ].join('\n');
+}

@@ -122,7 +122,7 @@
         <app-carnes [inscricoes]="inscricoes()" [parcelas]="parcelas()" [movimentos]="movimentos()" (alterado)="carregar()" />
       }
       @case ('receber') {
-        <app-receber [inscricoes]="inscricoes()" [parcelas]="parcelas()" [movimentos]="movimentos()" />
+        <app-receber [inscricoes]="inscricoes()" [parcelas]="parcelas()" [movimentos]="movimentos()" (alterado)="carregar()" />
       }
       @case ('caixa') {
         <app-caixa [movimentos]="movimentos()" [inscricoes]="inscricoes()" [cupons]="cupons()" (alterado)="carregar()" />
