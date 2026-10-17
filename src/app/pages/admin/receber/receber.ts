@@ -102,8 +102,13 @@ export class ReceberPage {
     this.selecionadas().reduce((t, x) => t + Number(x.parcela.valor), 0),
   );
 
+  protected readonly confirmando = signal(false);
+  protected readonly resultado = signal<string | null>(null);
+
   protected escolherPagador(valor: string): void {
     this.pagador.set(valor);
+    this.confirmando.set(false);
+    this.resultado.set(null);
     this.desmarcadas.set(new Set());
     this.comprovante.set(null);
     this.reciboConjunto.set(null);
@@ -114,6 +119,7 @@ export class ReceberPage {
     if ((evento.target as HTMLInputElement).checked) s.delete(id);
     else s.add(id);
     this.desmarcadas.set(s);
+    this.confirmando.set(false);
   }
 
   protected cobrarTudo(): string {
@@ -124,10 +130,17 @@ export class ReceberPage {
   /** Dá baixa em todas as parcelas marcadas e liga o mesmo comprovante a todas. */
   protected async receberTudo(): Promise<void> {
     const itens = this.selecionadas();
-    const total = this.totalSelecionado().toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    if (!itens.length || !confirm(`Dar baixa em ${itens.length} parcela(s), total de ${total}?`)) return;
+    if (!itens.length) return;
+    // Confirmação na própria tela: confirm() pode estar bloqueado pelo navegador e aí não acontece nada.
+    if (!this.confirmando()) {
+      this.confirmando.set(true);
+      return;
+    }
+    this.confirmando.set(false);
+    this.resultado.set(null);
     this.ocupado.set(true);
     const pagas: typeof itens = [];
+    const avisos: string[] = [];
     try {
       for (const x of itens) {
         try {
@@ -138,15 +151,16 @@ export class ReceberPage {
           if (!String((e as { message?: string })?.message ?? '').includes('PARCELA_JA_PAGA')) throw e;
         }
       }
-    } catch {
-      alert(`Não foi possível dar baixa em todas: ${pagas.length} de ${itens.length} foram baixadas.`);
+    } catch (e) {
+      const m = String((e as { message?: string })?.message ?? '');
+      avisos.push(`Não foi possível dar baixa em todas: ${pagas.length} de ${itens.length} foram baixadas.${m ? ` (${m})` : ''}`);
     }
     const arquivo = this.comprovante();
     if (arquivo && pagas.length) {
       try {
         await this.supabase.anexarComprovanteEmVarias(pagas.map((x) => x.parcela.id), arquivo);
       } catch {
-        alert('A baixa foi feita, mas o comprovante não foi enviado. Anexe pela aba Carnês.');
+        avisos.push('O comprovante não foi enviado. Anexe pela aba Carnês.');
       }
     }
     if (pagas.length) {
@@ -154,6 +168,8 @@ export class ReceberPage {
         linkWhatsapp(telefoneCobranca(pagas[0].inscricao), textoReciboPagador(pagas, this.dataPagamento())),
       );
     }
+    if (pagas.length && !avisos.length) avisos.push(`Baixa feita em ${pagas.length} parcela(s).`);
+    this.resultado.set(avisos.join(' '));
     this.comprovante.set(null);
     this.desmarcadas.set(new Set());
     this.ocupado.set(false);

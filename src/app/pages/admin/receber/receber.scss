@@ -49,5 +49,6 @@ li {
   }
   .baixa { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
   .anexo { display: inline-block; font-size: inherit; input { display: none; } }
+  .resultado { margin: 8px 0 0; font-weight: 600; }
   .destaque { display: inline-block; margin-top: 8px; font-weight: 600; }
 }
